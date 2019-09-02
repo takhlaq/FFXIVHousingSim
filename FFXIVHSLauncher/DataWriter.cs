@@ -679,9 +679,14 @@ namespace FFXIVHSLauncher
 
         public static void WriteMap(ARealmReversed realm, TerritoryType teriType)
         {
-            Plot.Ward ward = Plot.StringToWard(teriType.Name);
+            //Plot.Ward ward = Plot.StringToWard(teriType.Name);
+            string outdir = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name + "\\");
+            string outpath = Path.Combine(outdir, teriType.Name + ".json");
 
-            string outpath = FFXIVHSPaths.GetWardJson(ward);
+            //string outpath = FFXIVHSPaths.GetWardJson(ward);
+
+            if (!Directory.Exists(outdir))
+                Directory.CreateDirectory(outdir);
 
             if (File.Exists(outpath))
             {
@@ -698,13 +703,18 @@ namespace FFXIVHSLauncher
 
         public static void WriteMapModels(ARealmReversed realm, TerritoryType teriType)
         {
-            Plot.Ward ward = Plot.StringToWard(teriType.Name);
+            //Plot.Ward ward = Plot.StringToWard(teriType.Name);
+            string outpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name, "objects\\");
+            string inpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name + "\\", teriType.Name + ".json");
 
-            string inpath = FFXIVHSPaths.GetWardJson(ward);
+            if (!Directory.Exists(outpath))
+                Directory.CreateDirectory(outpath);
+
+            //string inpath = FFXIVHSPaths.GetWardJson(ward);
             if (!File.Exists(inpath))
                 throw new FileNotFoundException();
 
-            string outpath = FFXIVHSPaths.GetWardObjectsDirectory(ward);
+            //string outpath = FFXIVHSPaths.GetWardObjectsDirectory(ward);
 
             string json = File.ReadAllText(inpath);
                 

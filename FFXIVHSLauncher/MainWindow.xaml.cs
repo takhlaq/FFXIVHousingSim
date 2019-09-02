@@ -35,6 +35,7 @@ namespace FFXIVHSLauncher
         private SaintCoinach.ARealmReversed realm;
         private Territory territory;
         private StringBuilder maplist;
+        private List<TerritoryType> relevantTerritories = new List<TerritoryType>();
 
         public MainWindow()
         {
@@ -44,14 +45,16 @@ namespace FFXIVHSLauncher
 
             if (!realm.IsCurrentVersion)
             {
+                /*
                 MessageBox.Show("Game ver: " + realm.GameVersion + Environment.NewLine +
                                 "Def ver: " + realm.DefinitionVersion + Environment.NewLine +
                                 "Updating...");
-                realm.Update(true);
+                //realm.Update(true);
+                realm.Update(false);
+                */
             }
             
             TerritoryType[] territoryTypes = realm.GameData.GetSheet<TerritoryType>().ToArray();
-            List<TerritoryType> relevantTerritories = new List<TerritoryType>();
             
             foreach (TerritoryType t in territoryTypes)
             {
@@ -60,7 +63,7 @@ namespace FFXIVHSLauncher
                     byte intendedUse = (byte)t.GetRaw("TerritoryIntendedUse");
 
                     //Housing intended use column value is 13
-                    if (intendedUse == 13)// || intendedUse == 16 || intendedUse == 17)
+                    //if (intendedUse == 13)// || intendedUse == 16 || intendedUse == 17)
                     {
                         relevantTerritories.Add(t);
                     }
@@ -105,6 +108,8 @@ namespace FFXIVHSLauncher
                 maplist.Clear();
             else
                 maplist = new StringBuilder();
+
+            SelectedTeriLabel.Content = $"{selT.Name} ({selT.Key})";
         }
 
         #region Old code, keeping it here while moving away from it
@@ -490,7 +495,7 @@ namespace FFXIVHSLauncher
 
             sb.Append(territoryName + @"\");
 
-            String pathToSave = sb.ToString();
+            String pathToSave = Environment.CurrentDirectory + "\\" + sb.ToString();
 
             if (!Directory.Exists(pathToSave))
                 Directory.CreateDirectory(pathToSave);
@@ -847,6 +852,28 @@ namespace FFXIVHSLauncher
             TerritoryType t = (TerritoryType) placeBox.SelectedValue;
 
             DataWriter.WriteMap(realm, t);
+        }
+
+        private void PathBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                var query = pathBox.Text;
+                if (query.Trim() != "")
+                {
+                    List<TerritoryType> teris = new List<TerritoryType>();
+
+                    foreach (var teri in relevantTerritories)
+                        if (teri.Name.ToString().Contains(query) || teri.PlaceName.ToString().Contains(query))
+                            teris.Add(teri);
+
+                    placeBox.ItemsSource = teris;
+                }
+                else
+                {
+                    placeBox.ItemsSource = relevantTerritories;
+                }
+            }
         }
     }
 }

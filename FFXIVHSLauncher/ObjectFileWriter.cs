@@ -181,25 +181,39 @@ namespace FFXIVHSLauncher
                 String imgName = img.Path;
                 int imgLastSep = imgName.LastIndexOf('/');
                 imgName = imgName.Substring(imgLastSep + 1);
-                imgName = imgName.Replace(".tex", ".png");
+                imgName = imgName.Replace(".tex", ".dds");
 
                 //Write the image out
                 if (!File.Exists(mtlFolder + imgName))
-                    img.GetImage().Save(mtlFolder + imgName);
-
+                {
+                    var ddsBytes = SaintCoinach.Imaging.ImageConverter.GetDDS(img);
+                    if (ddsBytes != null)
+                    {
+                        System.IO.File.WriteAllBytes(mtlFolder + imgName, ddsBytes);
+                    }
+                    else
+                    {
+                        imgName = imgName.Replace(".dds", ".png");
+                        img.GetImage().Save(mtlFolder + imgName);
+                    }
+                }
                 String imgSuffix = imgName.Substring(imgName.Length - 6);
 
                 switch (imgSuffix)
                 {
+                    case "_n.dds":
                     case "_n.png":
                         matLines.Add("bump " + imgName);
                         break;
+                    case "_s.dds":
                     case "_s.png":
                         matLines.Add("map_Ks " + imgName);
                         break;
+                    case "_d.dds":
                     case "_d.png":
                         matLines.Add("map_Kd " + imgName);
                         break;
+                    case "_a.dds":
                     case "_a.png":
                         matLines.Add("map_Ka " + imgName);
                         break;

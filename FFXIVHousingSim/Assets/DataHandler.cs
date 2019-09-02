@@ -257,7 +257,7 @@ public static class DataHandler
 			    obj.GetComponent<Transform>().rotation = Quaternion.Euler(entry.transform.rotation.RadiansToDegreesRotation());
 			    obj.GetComponent<Transform>().localScale = entry.transform.scale;
 			    
-			    FixFFXIVObjectTransform(obj);
+			    //FixFFXIVObjectTransform(obj);
 
 			    Vector3 pos = obj.GetComponent<Transform>().position;
 			    pos = Vector3.Reflect(pos, Vector3.left);
@@ -266,7 +266,7 @@ public static class DataHandler
 		    }
 	    }
 	    
-	    LoadLandset();
+	    //LoadLandset();
     }
 
 	private static void AddMeshToGameObject(Mesh[] meshes, GameObject obj)

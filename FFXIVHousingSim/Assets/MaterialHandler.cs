@@ -120,7 +120,7 @@ public class MaterialHandler
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out hasAlphaInDiffuse);
 
-							tex.alphaIsTransparency = true;
+							//tex.alphaIsTransparency = true;
 //							if (hasAlphaInDiffuse)
 //								thisMaterial.shader = cutout;
 								
@@ -146,7 +146,7 @@ public class MaterialHandler
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()));
 
-							tex.alphaIsTransparency = true;
+							//tex.alphaIsTransparency = true;
 							//SetNormalMap(ref tex);
 							
 							if (tex != null && existingTexture == null)
@@ -171,7 +171,7 @@ public class MaterialHandler
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()));
 	
-							tex.alphaIsTransparency = true;
+							//tex.alphaIsTransparency = true;
 							if (tex != null && existingTexture == null)
 								thisMaterial.SetTexture("_Metallic0", tex);
 							else if (tex != null)
@@ -244,7 +244,33 @@ public class MaterialHandler
 		tex.Apply();
 	}
 
-	private Texture2D LoadTexture(String texPath)
+    public static Texture2D LoadTextureDXT(byte[] ddsBytes)
+    {
+        TextureFormat textureFormat;
+        byte ddsSizeCheck = ddsBytes[4];
+        if (ddsSizeCheck != 124)
+            throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
+
+        int height = ddsBytes[13] * 256 + ddsBytes[12];
+        int width = ddsBytes[17] * 256 + ddsBytes[16];
+
+        if (ddsBytes[0x57] == '1')
+            textureFormat = TextureFormat.DXT1;
+        else
+            textureFormat = TextureFormat.DXT5;
+
+        int DDS_HEADER_SIZE = 128;
+        byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+        Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
+
+        Texture2D texture = new Texture2D(width, height, textureFormat, false);
+        texture.LoadRawTextureData(dxtBytes);
+        texture.Apply();
+
+        return (texture);
+    }
+
+    private Texture2D LoadTexture(String texPath)
 	{
 		Texture2D texture = null;
  
@@ -253,10 +279,16 @@ public class MaterialHandler
  
 		texture = new Texture2D(1, 1);
 		
+        if (texPath.Contains("dds"))
+        {
+            texture = LoadTextureDXT(File.ReadAllBytes(texPath));
+            texture.alphaIsTransparency = true;
+            return texture;
+        }
 		if (DebugLoadFiles && !texPath.Contains("dummy"))
 			texture.LoadImage(File.ReadAllBytes(texPath));
  
-		texture.alphaIsTransparency = true;
+		//texture.alphaIsTransparency = true;
  
 		return texture;
 	}
@@ -270,8 +302,15 @@ public class MaterialHandler
 			return texture;
      
 		texture = new Texture2D(1, 1);
-     		
-		if (DebugLoadFiles && !texPath.Contains("dummy"))
+
+        if (texPath.Contains("dds"))
+        {
+            texture = LoadTextureDXT(File.ReadAllBytes(texPath));
+            texture.alphaIsTransparency = true;
+            return texture;
+        }
+
+        if (DebugLoadFiles && !texPath.Contains("dummy"))
 			texture.LoadImage(File.ReadAllBytes(texPath));
 
 		Color32[] alphaCheck = texture.GetPixels32();
@@ -281,7 +320,7 @@ public class MaterialHandler
 			if (c.a != 255)
 				hasAlpha = true;
 		}		
-		texture.alphaIsTransparency = true;
+		//texture.alphaIsTransparency = true;
      
 		return texture;
 	}

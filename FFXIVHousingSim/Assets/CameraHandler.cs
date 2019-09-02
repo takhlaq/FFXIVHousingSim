@@ -6,7 +6,7 @@ using Cinemachine;
 using FFXIVHSLib;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Experimental.UIElements;
+using UnityEngine.UIElements;
 using Vector3 = UnityEngine.Vector3;
 
 [RequireComponent(typeof(Camera))]
@@ -30,6 +30,10 @@ public class CameraHandler : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            
+        }
         if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             if (_plotView != 1)
@@ -55,7 +59,7 @@ public class CameraHandler : MonoBehaviour
             FreeLook.m_XAxis.m_InputAxisName = "Mouse X";
             FreeLook.m_YAxis.m_InputAxisName = "Mouse Y";
 
-            Cursor.lockState = CursorLockMode.Locked;
+            UnityEngine.Cursor.lockState = CursorLockMode.Locked;
         }
         else if (Input.GetKeyUp(KeyCode.Mouse0))
         {
@@ -65,7 +69,7 @@ public class CameraHandler : MonoBehaviour
             FreeLook.m_XAxis.m_InputAxisValue = 0f;
             FreeLook.m_YAxis.m_InputAxisValue = 0f;
     
-            Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
         }
 
         if (Input.mouseScrollDelta.y != 0)
@@ -86,17 +90,17 @@ public class CameraHandler : MonoBehaviour
     private void UpdatePlotView()
     {
         _centeredPlot = DataHandler.GetPlot(_ward, _plotView, _subdiv);
-        Debug.LogFormat("Plot {0} selected at {1} {2} {3}", _centeredPlot.index,
-            _centeredPlot.position.x, _centeredPlot.position.y, _centeredPlot.position.z);
+        //Debug.LogFormat("Plot {0} selected at {1} {2} {3}", _centeredPlot.index,
+        //    _centeredPlot.position.x, _centeredPlot.position.y, _centeredPlot.position.z);
 
         if (_center != null)
             Destroy(_center);
         _center = new GameObject();
-        _center.transform.position = _centeredPlot.position;
+        _center.transform.position = new Vector3(0, 0, 0); //??_centeredPlot?.position;
         FreeLook.LookAt = _center.transform;
-        FreeLook.Follow = _center.transform;
+        //FreeLook.Follow = _center.transform;
         
-        transform.position = _centeredPlot.position + new Vector3(0, 50, 0);
+        transform.position = new Vector3(0, 0, 0) + new Vector3(0, 50, 0);
         transform.rotation = Quaternion.Euler(_defaultLook);
     }
 }
