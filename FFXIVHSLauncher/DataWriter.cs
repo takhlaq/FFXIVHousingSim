@@ -58,6 +58,19 @@ namespace FFXIVHSLauncher
         }
 
         /// <summary>
+        /// Returns a compatible Transform from header data from LGBs.
+        /// </summary>
+        /// <param name="hdr"></param>
+        /// <returns></returns>
+        public static Transform TransformFromGimmickHeader(LgbEventObjectEntry.HeaderData hdr)
+        {
+            return new Transform(hdr.Translation.ToLibVector3(),
+                                 hdr.Rotation.ToLibVector3().ToQuaternion(),
+                                 hdr.Scale.ToLibVector3());
+        }
+
+
+        /// <summary>
         /// Returns a compatible Transform from header data from SGBs.
         /// </summary>
         /// <param name="hdr"></param>
@@ -667,6 +680,70 @@ namespace FFXIVHSLauncher
                                     AddSgbModelsToMap(ref map, ref rootGimMapGroup, rootGimEntry.Gimmick);
                                     
                                     foreach (var subGimGroup in rootGimEntry.Gimmick.Data.OfType<SgbGroup>())
+                                    {
+                                        foreach (var subGimEntry in subGimGroup.Entries.OfType<SgbGimmickEntry>())
+                                        {
+                                            MapGroup subGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(subGimEntry.Name, subGimEntry.Gimmick.File.Path));
+                                            subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
+
+                                            AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
+
+                                            rootGimMapGroup.AddGroup(subGimMapGroup);
+                                        }
+                                    }
+                                    gimMapGroup.AddGroup(rootGimMapGroup);
+                                }
+                            }
+                        }
+                        lgbMapGroup.AddGroup(gimMapGroup);
+                    }
+
+                    foreach (var eobj in lgbGroup.Entries.OfType<LgbEventObjectEntry>())
+                    {
+                        if (eobj.Gimmick == null)
+                            continue;
+
+                        MapGroup gimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(eobj.Name, eobj.Gimmick.File.Path));
+                        gimMapGroup.groupTransform = TransformFromGimmickHeader(eobj.Header);
+
+                        AddSgbModelsToMap(ref map, ref gimMapGroup, eobj.Gimmick);
+
+                        foreach (var rootGimGroup in eobj.Gimmick.Data.OfType<SgbGroup>())
+                        {
+                            foreach (var rootGimEntry in rootGimGroup.Entries.OfType<SgbGimmickEntry>())
+                            {
+                                if (rootGimEntry.Gimmick != null)
+                                {
+                                    MapGroup rootGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(rootGimEntry.Name, rootGimEntry.Gimmick.File.Path));
+                                    rootGimMapGroup.groupTransform = TransformFromGimmickHeader(rootGimEntry.Header);
+
+                                    AddSgbModelsToMap(ref map, ref rootGimMapGroup, rootGimEntry.Gimmick);
+
+                                    foreach (var subGimGroup in rootGimEntry.Gimmick.Data.OfType<SgbGroup>())
+                                    {
+                                        foreach (var subGimEntry in subGimGroup.Entries.OfType<SgbGimmickEntry>())
+                                        {
+                                            MapGroup subGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(subGimEntry.Name, subGimEntry.Gimmick.File.Path));
+                                            subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
+
+                                            AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
+
+                                            rootGimMapGroup.AddGroup(subGimMapGroup);
+                                        }
+                                    }
+                                    gimMapGroup.AddGroup(rootGimMapGroup);
+                                }
+                            }
+                            foreach (var sgb1cEntry in rootGimGroup.Entries.OfType<SgbGroup1CEntry>())
+                            {
+                                if (sgb1cEntry.Gimmick != null)
+                                {
+                                    MapGroup rootGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(sgb1cEntry.Name, sgb1cEntry.Gimmick.File.Path));
+                                    rootGimMapGroup.groupTransform = Transform.Empty;
+
+                                    AddSgbModelsToMap(ref map, ref rootGimMapGroup, sgb1cEntry.Gimmick);
+
+                                    foreach (var subGimGroup in sgb1cEntry.Gimmick.Data.OfType<SgbGroup>())
                                     {
                                         foreach (var subGimEntry in subGimGroup.Entries.OfType<SgbGimmickEntry>())
                                         {
