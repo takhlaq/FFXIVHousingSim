@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Object = System.Object;
 using Transform = UnityEngine.Transform;
 using Vector3 = UnityEngine.Vector3;
+using Quaternion = UnityEngine.Quaternion;
 
 /// <summary>
 /// Handles all extracted FFXIV data.
@@ -17,11 +18,16 @@ public static class DataHandler
 {
 	private static bool DebugLoadMap = true;
 	private static bool DebugCustomLoad = false;
-
-	//Implement
-	private static int[] debugCustomLoadList = new[]
+	private static bool DebugLoadExteriors = false;
+	
+//	private static int[] debugCustomLoadList =
+//	{
+//		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+//	};
+	
+	private static int[] debugCustomLoadList =
 	{
-		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30
+		126
 	};
 	
     //Serialized FFXIV data
@@ -36,8 +42,8 @@ public static class DataHandler
 	private static Dictionary<int, Mesh[][][]> _exteriorFixtureMeshes;
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
 
-    private static Plot.Ward _territory = (Plot.Ward) 999;
-    public static Plot.Ward territory
+    private static Territory _territory = (Territory) 999;
+    public static Territory territory
     {
         get { return _territory; }
         set
@@ -50,7 +56,7 @@ public static class DataHandler
 	        
 	        //TODO: When events implemented make this an event
 	        CameraHandler[] c = Resources.FindObjectsOfTypeAll<CameraHandler>();
-	        c[0]._ward = value;
+	        c[0]._territory = value;
 			
 			GameObject[] currentGameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
 	
@@ -89,6 +95,9 @@ public static class DataHandler
 
 	private static void LoadLandset()
 	{
+		if (!DebugLoadExteriors)
+			return;
+			
 		if (_exteriorFixtures == null)
 			LoadExteriorFixtures();
 		
@@ -127,7 +136,19 @@ public static class DataHandler
 				_landSet[plotIndex].size = plotAt.size;
 			}
 
+			if (_landSet[plotIndex].fixtures[(int) FixtureType.fnc - 1] == 0)
+				_landSet[plotIndex].fixtures[(int) FixtureType.fnc - 1] = DefaultFences.fnc[(int) _territory];
+
 			HousingExteriorBlueprint blueprint = _blueprints.set[(int) _landSet[plotIndex].size];
+			
+			//TODO: If you ever figure out how to tell which transforms are for which house size, fix this
+			string groupName = "{0}_{1:D2}_{2}_house";
+			string fixedWardName = _territory.ToString().ToLower().Substring(0, _territory.ToString().Length - 1) + '0';
+			string strSize = _landSet[plotIndex].size.ToString();
+
+			groupName = string.Format(groupName, fixedWardName, plotIndex + 1, strSize);
+			Debug.Log(groupName);
+			GameObject parentPlotObject = GameObject.Find(groupName);
 			
 			//For each fixture in our landset element
 			for (int fixtureIndex = 0; fixtureIndex < _landSet[plotIndex].fixtures.Length; fixtureIndex++)
@@ -157,54 +178,30 @@ public static class DataHandler
 					
 					foreach (FFXIVHSLib.Transform t in blueprint.fixtureTransforms[fixtureType][variantIndex])
 					{
-						Vector3 pos = t.translation;
-						Vector3 vrot = t.rotation.RadiansToDegreesRotation();
-
-						//SCALE STUFF BLEASE
-						//Rethink parent objects for this, hopefully transform fix will make this unnecessary?
-						//Really don't want to continue with the parent object for all variant models
 						GameObject variantBaseObject = new GameObject();
-						variantBaseObject.GetComponent<Transform>().position = plotAt.position;
-						variantBaseObject.GetComponent<Transform>().rotation =
-							Quaternion.Euler(plotAt.rotation.RadiansToDegreesRotation());
-						variantBaseObject.GetComponent<Transform>().localScale = Vector3.Reflect(Vector3.one, Vector3.left);
-						FixFFXIVObjectTransform(variantBaseObject);
+						variantBaseObject.GetComponent<Transform>().SetParent(parentPlotObject.transform);
+						variantBaseObject.GetComponent<Transform>().localPosition = t.translation;
+						variantBaseObject.GetComponent<Transform>().localRotation = t.rotation;
+						variantBaseObject.GetComponent<Transform>().localScale = t.scale;
 						variantBaseObject.name = string.Format("bp{0}_ft{1}_v{2}", _landSet[plotIndex].size, fixtureType, variantIndex);
 						
 						for (int modelIndex = 0; modelIndex < objects.Length; modelIndex++)
 						{
-							GameObject obj;
-
-							if (objects[modelIndex] != null)
-								obj = objects[modelIndex];
-							else
+							if (objects[modelIndex] == null)
 								continue;
 							
 							FFXIVHSLib.Transform modelTransform = transformsForModels[variantIndex][modelIndex];
 
-							//variant transform + model's transform + plot transform
-							Vector3 newPos = pos + modelTransform.translation;
-							Vector3 newvRot = vrot + modelTransform.rotation.RadiansToDegreesRotation();
-							Quaternion newRot = Quaternion.Euler(newvRot);
-							GameObject addedModel = UnityEngine.Object.Instantiate(obj);
+							GameObject addedModel = UnityEngine.Object.Instantiate(objects[modelIndex]);
 							addedModel.GetComponent<Transform>().SetParent(variantBaseObject.GetComponent<Transform>());
-							addedModel.GetComponent<Transform>().localPosition = pos + modelTransform.translation;
-							addedModel.GetComponent<Transform>().localRotation = Quaternion.Euler(newvRot + modelTransform.rotation.RadiansToDegreesRotation());
-							addedModel.GetComponent<Transform>().localScale = t.scale;
-							
-							//FixFFXIVObjectTransform(addedModel);
+							addedModel.GetComponent<Transform>().localPosition = modelTransform.translation;
+							addedModel.GetComponent<Transform>().localRotation = modelTransform.rotation;
+							addedModel.GetComponent<Transform>().localScale = modelTransform.scale;
+							addedModel.name = addedModel.name.Replace("(Clone)", "_") + string.Format("{0}_{1}_{2}", fixtureIndex, variantIndex, modelIndex);
 							addedModel.SetActive(true);
 							
-							addedModel.name = addedModel.name.Replace("(Clone)", "_") + string.Format("{0}_{1}_{2}", fixtureIndex, variantIndex, modelIndex);
-							UnityEngine.Object.Destroy(obj);
+							UnityEngine.Object.Destroy(objects[modelIndex]);
 						}
-					}
-
-					//Don't take up my memory
-					foreach (GameObject obj in objects)
-					{
-						if (obj != null)
-							UnityEngine.Object.Destroy(obj);
 					}
 				}
 			}
@@ -213,7 +210,7 @@ public static class DataHandler
 
     private static void LoadMapTerrainInfo()
     {
-        string jsonText = File.ReadAllText(FFXIVHSPaths.GetWardJson(territory));
+        string jsonText = File.ReadAllText(FFXIVHSPaths.GetTerritoryJson(territory));
 
         _map = JsonConvert.DeserializeObject<Map>(jsonText);
 	    Debug.Log("_map loaded.");
@@ -225,10 +222,14 @@ public static class DataHandler
 
         _modelMeshes = new Dictionary<int, Mesh[]>();
 
-	    string objectsFolder = FFXIVHSPaths.GetWardObjectsDirectory(territory);
+	    string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(territory);
         
         foreach (MapModel model in _map.models.Values)
         {
+	        if (DebugCustomLoad)
+		        if (!debugCustomLoadList.Contains(model.id))
+			        continue;
+	        
             Mesh[] modelMeshes = new Mesh[model.numMeshes];
 
             for (int i = 0; i < model.numMeshes; i++)
@@ -247,27 +248,64 @@ public static class DataHandler
 	    {
 		    LoadMapMeshes();
 		
-		    foreach (MapModelEntry entry in _map.modelEntries.Values)
-		    {	
-			    //Add mesh, handles materials
-			    Mesh[] meshes = _modelMeshes[entry.modelId];
-			    GameObject obj = AddMeshToNewGameObject(meshes, true);
-
-			    obj.GetComponent<Transform>().position = entry.transform.translation;
-			    obj.GetComponent<Transform>().rotation = Quaternion.Euler(entry.transform.rotation.RadiansToDegreesRotation());
-			    obj.GetComponent<Transform>().localScale = entry.transform.scale;
-			    
-			    //FixFFXIVObjectTransform(obj);
-
-			    Vector3 pos = obj.GetComponent<Transform>().position;
-			    pos = Vector3.Reflect(pos, Vector3.left);
-			    obj.GetComponent<Transform>().position = pos;
-			    obj.SetActive(true);
-		    }
+		    foreach (MapGroup group in _map.groups.Values)
+			    LoadMapGroup(group);
 	    }
 	    
 	    //LoadLandset();
     }
+
+	private static void LoadMapGroup(MapGroup group, GameObject parent = null)
+	{
+		if (group.groupName.Contains("fnc0000"))
+			return;
+		
+		GameObject groupRootObject = new GameObject(group.groupName);
+
+		if (parent == null)
+		{
+			groupRootObject.GetComponent<Transform>().position = Vector3.Reflect(group.groupTransform.translation, Vector3.left);
+			groupRootObject.GetComponent<Transform>().rotation = Quaternion.Euler(Vector3.Reflect(group.groupTransform.rotation.ToVector3(), Vector3.left));
+			groupRootObject.GetComponent<Transform>().localScale = Vector3.Reflect(group.groupTransform.scale, Vector3.left);
+		}
+		else
+		{
+			groupRootObject.GetComponent<Transform>().SetParent(parent.GetComponent<Transform>());
+			groupRootObject.GetComponent<Transform>().localPosition = group.groupTransform.translation;
+			groupRootObject.GetComponent<Transform>().localRotation = group.groupTransform.rotation;
+			groupRootObject.GetComponent<Transform>().localScale = group.groupTransform.scale;
+		}
+		
+		groupRootObject.SetActive(true);
+		
+		if (group.entries != null && group.entries.Count > 0)
+		{
+			foreach (MapModelEntry entry in group.entries)
+			{
+				if (DebugCustomLoad)
+					if (!debugCustomLoadList.Contains(entry.modelId))
+						continue;
+				
+				Mesh[] meshes = _modelMeshes[entry.modelId];
+				GameObject obj = AddMeshToNewGameObject(meshes, true);
+
+				obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+				obj.GetComponent<Transform>().localPosition = entry.transform.translation;
+				obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
+				obj.GetComponent<Transform>().localScale = entry.transform.scale;
+				obj.SetActive(true);
+			}	
+		}
+
+		if (group.groups != null && group.groups.Count > 0)
+		{
+			foreach (MapGroup subGroup in group.groups)
+			{
+				if (subGroup != null)
+					LoadMapGroup(subGroup, groupRootObject);
+			}	
+		}
+	}
 
 	private static void AddMeshToGameObject(Mesh[] meshes, GameObject obj)
 	{
@@ -404,30 +442,6 @@ public static class DataHandler
 		obj.SetActive(false);
 		return obj;
 	}
-
-	private static void FixFFXIVObjectTransform(GameObject obj)
-	{
-		//Get vectors for transform
-		Vector3 vrot = obj.GetComponent<Transform>().rotation.eulerAngles;
-		Vector3 scal = obj.GetComponent<Transform>().localScale;
-	    
-		vrot = Vector3.Reflect(vrot, Vector3.down);
-		vrot = Vector3.Reflect(vrot, Vector3.left);
-		Quaternion rot = Quaternion.Euler(vrot);
-		
-		float yrot = rot.eulerAngles.y;
-		
-		if (yrot < 0)
-			yrot = 360 + yrot;
-		
-		scal = Vector3.Reflect(scal, Vector3.left);
-
-		if (yrot > 90f && yrot < 270f)
-			rot = Quaternion.Euler(Vector3.Reflect(rot.eulerAngles, Vector3.down));
-
-		obj.GetComponent<Transform>().rotation = rot;
-		obj.GetComponent<Transform>().localScale = scal;
-	}
 	
 	private static Mesh[][][] GetMeshesForExteriorFixture(int fixtureId, ref FFXIVHSLib.Transform[][] transformsPerModel)
 	{
@@ -484,25 +498,18 @@ public static class DataHandler
 		}
 		return modelMeshes;
 	}
-	
-    public static Plot.Ward GetCurrentTerritoryWard()
-    {
-        return territory;
-    }
     
-    public static Plot GetPlot(Plot.Ward ward, int plotNum, bool subdiv)
+    public static Plot GetPlot(Territory territory, int plotNum, bool subdiv)
     {
         if (_wardInfo == null)
             LoadWardInfo();
 
-	    Debug.LogFormat("GetPlot {0} {1} {2}", ward, plotNum, subdiv);
-        Plot p = _wardInfo.Where(_ => _.ward == ward &&
+	    Debug.LogFormat("GetPlot {0} {1} {2}", territory, plotNum, subdiv);
+        Plot p = _wardInfo.Where(_ => _.ward == territory &&
                                       _.index == plotNum &&
                                       _.subdiv == subdiv)
                                         .Select(_ => _).Single();
 
         return p;
     }
-
-    
 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using FFXIVHSLib;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 
 public class StartupScript : MonoBehaviour
 {
@@ -17,14 +18,12 @@ public class StartupScript : MonoBehaviour
 		DebugTimer timer = new DebugTimer();
 		timer.registerEvent("Begin");
 		
-		DataHandler.territory = Plot.Ward.S1H1;
+		DataHandler.territory = Territory.S1H1;
 		
 		timer.registerEvent("TerritoryLoad");
 
 		Debug.Log("Startupscript finished.");
 	}
-
-
 
 	// Update is called once per frame
 	void Update () {

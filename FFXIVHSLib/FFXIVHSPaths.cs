@@ -15,7 +15,7 @@ namespace FFXIVHSLib
     public static class FFXIVHSPaths
     {
         //TODO decide on a main path or make it like a setting or something
-        private const string root = @"C:\Users\Liam\Desktop\trash\paths\";
+        private const string root = @"E:\coding\repositories\ffxiv related\FFXIVHousingSim\Out";
         private const string GameDirectory = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\";
 
         private static void CreateDirectoryIfNotExists(string path)
@@ -50,34 +50,34 @@ namespace FFXIVHSLib
             return path;
         }
 
-        public static string GetWardDirectory(Plot.Ward ward)
+        public static string GetTerritoryDirectory(Territory territory)
         {
-            string path = Path.Combine(root, ward.ToString().ToLowerInvariant() + "\\");
+            string path = Path.Combine(root, territory.ToString().ToLowerInvariant() + "\\");
 
             CreateDirectoryIfNotExists(path);
 
             return path;
         }
 
-        public static string GetWardObjectsDirectory(Plot.Ward ward)
+        public static string GetTerritoryObjectsDirectory(Territory territory)
         {
-            string path = Path.Combine(GetWardDirectory(ward), "objects\\");
+            string path = Path.Combine(GetTerritoryDirectory(territory), "objects\\");
 
             CreateDirectoryIfNotExists(path);
 
             return path;
         }
 
-        public static string GetWardJson(Plot.Ward ward)
+        public static string GetTerritoryJson(Territory territory)
         {
-            string path = Path.Combine(GetWardDirectory(ward), ward.ToString().ToLowerInvariant() + ".json");
+            string path = Path.Combine(GetTerritoryDirectory(territory), territory.ToString().ToLowerInvariant() + ".json");
 
             return path;
         }
 
-        public static string GetWardLandsetJson(Plot.Ward ward)
+        public static string GetWardLandsetJson(Territory territory)
         {
-            string path = Path.Combine(GetWardDirectory(ward), "Landset.json");
+            string path = Path.Combine(GetTerritoryDirectory(territory), "Landset.json");
 
             return path;
         }

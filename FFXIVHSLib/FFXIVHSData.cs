@@ -8,6 +8,18 @@ namespace FFXIVHSLib
     //Utility for serialization shared between WPF/SaintCoinach and Unity.
     //TODO: Extract classes to their own files
 
+    public enum Territory
+    {
+        //Wards
+        S1H1, F1H1, W1H1, E1H1,
+
+        //Houses
+        S1I1, S1I2, S1I3, S1I4,
+        F1I1, F1I2, F1I3, F1I4,
+        W1I1, W1I2, W1I3, W1I4,
+        E1I1, E1I2, E1I3, E1I4
+    }
+
     public enum Size
     {
         s, m, l, x = 254
@@ -38,6 +50,12 @@ namespace FFXIVHSLib
     public enum FenceVariants
     {
         a, b, c, d
+    }
+
+    public class DefaultFences
+    {
+        public static readonly int[] fnc =
+            {10222, 10223, 10224, 1022402};
     }
 
     public class Vector3
@@ -87,33 +105,67 @@ namespace FFXIVHSLib
 
             return (v3.x == x && v3.y == y && v3.z == z);
         }
+    }
+
+    public class Quaternion
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+
+        public Quaternion()
+        {
+
+        }
+
+        public Quaternion(float x, float y, float z, float w)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+        }
+
+        public static implicit operator UnityEngine.Quaternion(Quaternion q)
+        {
+            return new UnityEngine.Quaternion(q.x, q.y, q.z, q.w);
+        }
 
         /// <summary>
-        /// Returns this Vector3 with its x, y, and z components converted from
-        /// degrees to radians using Mathf.Rad2Deg.
+        /// Cannot be called from outside of Unity code.
         /// </summary>
+        /// <param name="q"></param>
         /// <returns></returns>
-        public Vector3 RadiansToDegreesRotation()
+        public Vector3 ToVector3()
         {
-            Vector3 v = new Vector3(x, y, z);
-            v.x *= Mathf.Rad2Deg;
-            v.y *= Mathf.Rad2Deg;
-            v.z *= Mathf.Rad2Deg;
-            return v;
+            UnityEngine.Vector3 euler = ((UnityEngine.Quaternion) this).eulerAngles;
+            Vector3 vector = new Vector3(euler.x, euler.y, euler.z);
+            return vector;
         }
     }
 
     public class Transform
     {
         public Vector3 translation { get; set; }
-        public Vector3 rotation { get; set; }
+        public Quaternion rotation { get; set; }
         public Vector3 scale { get; set; }
+
+        public static Transform Empty =
+            new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1), new Vector3(1, 1, 1));
 
         public Transform()
         {
             translation = new Vector3();
-            rotation = new Vector3();
+            rotation = new Quaternion();
             scale = new Vector3();
+        }
+
+        public Transform(Vector3 translation, Quaternion rotation, Vector3 scale)
+        {
+            this.translation = translation;
+            this.rotation = rotation;
+            this.scale = scale;
         }
 
         public override bool Equals(object obj)
@@ -135,7 +187,7 @@ namespace FFXIVHSLib
     /// </summary>
     public class WardSetting
     {
-        public Plot.Ward Ward { get; set; }
+        public Territory Territory { get; set; }
         public string group { get; set; }
         public string subdivisionSuffix { get; set; }
         public string plotName { get; set; }
@@ -149,27 +201,24 @@ namespace FFXIVHSLib
     public class Map
     {
         /// <summary>
-        /// Handles the modelEntries of the map and their positions.
+        /// Handles the groups of the map and their positions.
         /// </summary>
-        public Dictionary<int, MapModelEntry> modelEntries { get; set; }
+        public Dictionary<int, MapGroup> groups { get; set; }
 
         /// <summary>
         /// Maps a first-come, first-serve ID to each unique model.
         /// </summary>
         public Dictionary<int, MapModel> models { get; set; }
 
-        public void AddMapModelEntry(MapModelEntry entry)
+        public void AddMapGroup(MapGroup group)
         {
-            if (modelEntries == null)
-                modelEntries = new Dictionary<int, MapModelEntry>();
-
-            if (!models.ContainsKey(entry.modelId))
-                throw new KeyNotFoundException();
-
-            int id = modelEntries.Keys.Count;
+            if (groups == null)
+                groups = new Dictionary<int, MapGroup>();
             
-            entry.id = id;
-            modelEntries.Add(id, entry);
+            int id = groups.Keys.Count;
+            
+            group.id = id;
+            groups.Add(id, group);
         }
 
         /// <summary>
@@ -193,6 +242,49 @@ namespace FFXIVHSLib
             model.id = id;
             models.Add(id, model);
             return id;
+        }
+    }
+
+    public class MapGroup
+    {
+        public enum GroupType
+        {
+            LGB, SGB, TERRAIN
+        }
+
+        public int id;
+        public GroupType type;
+        public string groupName;
+        public Transform groupTransform;
+
+        public List<MapGroup> groups;
+        public List<MapModelEntry> entries;
+
+        public MapGroup()
+        {
+
+        }
+
+        public MapGroup(GroupType t, string name)
+        {
+            type = t;
+            groupName = name;
+        }
+
+        public void AddGroup(MapGroup mg)
+        {
+            if (groups == null)
+                groups = new List<MapGroup>();
+
+            groups.Add(mg);
+        }
+
+        public void AddEntry(MapModelEntry mme)
+        {
+            if (entries == null)
+                entries = new List<MapModelEntry>();
+
+            entries.Add(mme);
         }
     }
 
@@ -236,28 +328,28 @@ namespace FFXIVHSLib
     /// </summary>
     public class Plot
     {
-        public enum Ward { S1H1, F1H1, W1H1, E1H1 }
-
-        public Ward ward { get; set; }
+        public Territory ward { get; set; }
         public bool subdiv { get; set; }
         public byte index { get; set; }
+        public int defaultFenceId { get; set; }
         public Size size { get; set; }
         public Vector3 position { get; set; }
-        public Vector3 rotation { get; set; }
-
+        public Quaternion rotation { get; set; }
+        
         public Plot() { }
 
-        public Plot(Ward ward, bool sub, byte ind, Size size)
+        public Plot(Territory ward, bool sub, byte ind, Size size)
         {
             this.ward = ward;
+            defaultFenceId = DefaultFences.fnc[(int) ward];
             this.index = ind;
             this.subdiv = sub;
             this.size = size;
         }
 
-        public static Ward StringToWard(String ward)
+        public static Territory StringToWard(String ward)
         {
-            return (Ward) Enum.Parse(typeof(Ward), ward.ToUpperInvariant());
+            return (Territory) Enum.Parse(typeof(Territory), ward.ToUpperInvariant());
         }
     }
 

@@ -9,10 +9,13 @@ using SaintCoinach.Graphics;
 using SaintCoinach.Graphics.Lgb;
 using SaintCoinach.Graphics.Sgb;
 using SaintCoinach.Xiv;
-using File = System.IO.File;
 using FFXIVHSLib;
+using SharpDX;
+using File = System.IO.File;
 using Directory = System.IO.Directory;
 using Map = FFXIVHSLib.Map;
+using Quaternion = FFXIVHSLib.Quaternion;
+using Territory = FFXIVHSLib.Territory;
 using Vector3 = FFXIVHSLib.Vector3;
 
 
@@ -30,17 +33,66 @@ namespace FFXIVHSLauncher
         /// <param name="rotation"></param>
         /// <param name="scale"></param>
         /// <returns></returns>
-        private static Transform TransformFromVectors(SaintCoinach.Graphics.Vector3 translation,
-            SaintCoinach.Graphics.Vector3 rotation,
-            SaintCoinach.Graphics.Vector3 scale)
+        public static Transform TransformFromVectors(SaintCoinach.Graphics.Vector3 translation,
+                                                        SaintCoinach.Graphics.Vector3 rotation,
+                                                        SaintCoinach.Graphics.Vector3 scale)
         {
             Transform t = new Transform();
             t.translation = new Vector3(translation.X, translation.Y, translation.Z);
-            t.rotation = new Vector3(rotation.X, rotation.Y, rotation.Z);
+            
+            t.rotation = new Vector3(rotation.X, rotation.Y, rotation.Z).ToQuaternion();
             t.scale = new Vector3(scale.X, scale.Y, scale.Z);
             return t;
         }
-        
+
+        /// <summary>
+        /// Returns a compatible Transform from header data from LGBs.
+        /// </summary>
+        /// <param name="hdr"></param>
+        /// <returns></returns>
+        public static Transform TransformFromGimmickHeader(SgbGimmickEntry.HeaderData hdr)
+        {
+            return new Transform(hdr.Translation.ToLibVector3(),
+                                 hdr.Rotation.ToLibVector3().ToQuaternion(),
+                                 hdr.Scale.ToLibVector3());
+        }
+
+        /// <summary>
+        /// Returns a compatible Transform from header data from SGBs.
+        /// </summary>
+        /// <param name="hdr"></param>
+        /// <returns></returns>
+        public static Transform TransformFromGimmickHeader(LgbGimmickEntry.HeaderData hdr)
+        {
+            return new Transform(hdr.Translation.ToLibVector3(),
+                hdr.Rotation.ToLibVector3().ToQuaternion(),
+                hdr.Scale.ToLibVector3());
+        }
+
+        public static List<TerritoryType> GetHousingTerritoryTypes(ARealmReversed realm)
+        {
+            //Obtain all housing TerritoryTypes
+            IXivSheet<TerritoryType> allTerr = realm.GameData.GetSheet<TerritoryType>();
+            TerritoryType[] tTypes = allTerr.ToArray();
+            List<TerritoryType> housingTeriTypes = new List<TerritoryType>();
+
+            foreach (TerritoryType t in tTypes)
+            {
+                if (!String.IsNullOrEmpty(t.PlaceName.ToString()))
+                {
+                    byte intendedUse = (byte)t.GetRaw("TerritoryIntendedUse");
+
+                    //Housing territory intended use is 13
+                    if (intendedUse == 13)
+                    {
+                        housingTeriTypes.Add(t);
+                    }
+                }
+            }
+
+            return housingTeriTypes;
+        }
+
         /// <summary>
         /// Occurs first in the ward data output flow and populates plots with the sizes of
         /// the appropriate plots from the sheet HousingLandSet.
@@ -51,13 +103,13 @@ namespace FFXIVHSLauncher
 
             foreach (XivRow row in landSet)
             {
-                Plot.Ward thisWard = (Plot.Ward) row.Key;
+                Territory thisTerritory = (Territory) row.Key;
 
                 for (int i = 0; i < 60; i++)
                 {
                     //Get this plot's size
                     Size size = (Size) (byte) row[i];
-                    Plot p = new Plot(thisWard, i > 29, (byte) (i % 30 + 1), size);
+                    Plot p = new Plot(thisTerritory, i > 29, (byte) (i % 30 + 1), size);
                     plots.Add(p);
                 }
             }
@@ -74,30 +126,13 @@ namespace FFXIVHSLauncher
         /// </summary>
         private static void ReadTerritoryPlots(ARealmReversed realm, ref List<Plot> plots)
         {
-            //Obtain all housing TerritoryTypes
-            IXivSheet<TerritoryType> allTerr = realm.GameData.GetSheet<TerritoryType>();
-            TerritoryType[] tTypes = allTerr.ToArray();
-            List<TerritoryType> housingTeriTypes = new List<TerritoryType>();
-
-            foreach (TerritoryType t in tTypes)
-            {
-                if (!String.IsNullOrEmpty(t.PlaceName.ToString()))
-                {
-                    byte intendedUse = (byte)t.GetRaw("TerritoryIntendedUse");
-                    
-                    //Housing territory intended use is 13
-                    if (intendedUse == 13)
-                    {
-                        housingTeriTypes.Add(t);
-                    }
-                }
-            }
+            List<TerritoryType> housingTeriTypes = GetHousingTerritoryTypes(realm);
 
             WardSetting[] settings = JsonConvert.DeserializeObject<WardSetting[]>(File.ReadAllText(FFXIVHSPaths.GetWardSettingsJson()));
             
             foreach (TerritoryType tType in housingTeriTypes)
             {
-                Territory t = new Territory(tType);
+                SaintCoinach.Graphics.Territory t = new SaintCoinach.Graphics.Territory(tType);
                 LgbFile bg = null;
 
                 //Get the ward's information from the wardsettings.json
@@ -105,7 +140,7 @@ namespace FFXIVHSLauncher
 
                 foreach (WardSetting ws in settings)
                 {
-                    if (ws.Ward.ToString() == t.Name.ToUpper())
+                    if (ws.Territory.ToString() == t.Name.ToUpper())
                     {
                         plotName = ws.plotName;
                         groupName = ws.group;
@@ -156,7 +191,7 @@ namespace FFXIVHSLauncher
                                         SaintCoinach.Graphics.Vector3 position = lgbGimmickEntry.Header.Translation;
                                         SaintCoinach.Graphics.Vector3 rotation = lgbGimmickEntry.Header.Rotation;
                                         Vector3 pos = new Vector3(position.X * -1, position.Y, position.Z);
-                                        Vector3 rot = new Vector3(rotation.X, rotation.Y, rotation.Z);
+                                        Quaternion rot = new Vector3(rotation.X, rotation.Y, rotation.Z).ToQuaternion();
 
                                         mainPlotList[plotIndex].position = pos;
                                         mainPlotList[plotIndex].rotation = rot;
@@ -182,7 +217,7 @@ namespace FFXIVHSLauncher
                                         SaintCoinach.Graphics.Vector3 position = lgbGimmickEntry.Header.Translation;
                                         SaintCoinach.Graphics.Vector3 rotation = lgbGimmickEntry.Header.Rotation;
                                         Vector3 pos = new Vector3(position.X * -1, position.Y, position.Z);
-                                        Vector3 rot = new Vector3(rotation.X, rotation.Y, rotation.Z);
+                                        Quaternion rot = new Vector3(rotation.X, rotation.Y, rotation.Z).ToQuaternion();
 
                                         subdivPlotList[plotIndex].position = pos;
                                         subdivPlotList[plotIndex].rotation = rot;
@@ -267,6 +302,64 @@ namespace FFXIVHSLauncher
                 fixtures.Add(rowFixture.fixtureId, rowFixture);
             }
             return fixtures;
+        }
+
+        /// <summary>
+        /// Adds the housing territory default fences as exterior fixtures with an id.
+        /// The game does not actually recognize these as fixtures, they are part of the map.
+        /// However, currently there is no way to know which transforms within the map sgbs belongs to
+        /// which house size. So we have to work around it. Thanks SE!
+        /// </summary>
+        /// <param name="realm"></param>
+        /// <param name="fixtures"></param>
+        private static void AddDefaultFences(ARealmReversed realm, ref Dictionary<int, HousingExteriorFixture> fixtures)
+        {
+            List<TerritoryType> teris = GetHousingTerritoryTypes(realm);
+
+            //Obtain all housing TerritoryTypes
+            IXivSheet<PlaceName> placeNames = realm.GameData.GetSheet<PlaceName>();
+            PlaceName[] pNames = placeNames.ToArray();
+
+            string[] fncPaths =
+            {
+                "bg/ffxiv/{0}/hou/dyna/c_fnc/0000/asset/{1}_f_fnc0000a.sgb",
+                "bg/ffxiv/{0}/hou/dyna/c_fnc/0000/asset/{1}_f_fnc0000b.sgb",
+                "bg/ffxiv/{0}/hou/dyna/c_fnc/0000/asset/{1}_f_fnc0000c.sgb",
+                "bg/ffxiv/{0}/hou/dyna/c_fnc/0000/asset/{1}_f_fnc0000d.sgb",
+            };
+
+            foreach (TerritoryType t in teris)
+            {
+                //Get usable strings
+                string bgFolder = t.Bg.ToString().Split('/')[1];
+                string namePrefix = t.Name.ToString();
+                namePrefix = namePrefix.Substring(0, namePrefix.Length - 1) + '0';
+
+                //bgFolder is now 'sea_s1', 'est_e1', etc
+                //namePrefix is now 's1h0', 'e1h0', etc
+                int intUse = pNames.Where(_ => _.Name == t.RegionPlaceName.Name)
+                                    .Select(_ => _.Key)
+                                    .Min(_ => _);
+                
+                HousingExteriorFixture thisFence = new HousingExteriorFixture();
+                thisFence.itemId = 0;
+                thisFence.fixtureId = int.Parse("102" + intUse);
+                thisFence.fixtureModelKey = 0;  //Not in the sheet, no key ¯\_(ツ)_/¯
+                thisFence.fixtureType = FixtureType.fnc;
+                thisFence.fixtureIntendedUse = intUse;
+                thisFence.size = Size.x;
+                thisFence.name = $"Default {t.PlaceName.NameWithoutArticle} Fence";
+
+                List<string> sgbPaths = new List<string>();
+
+                foreach (string fnc in fncPaths)
+                    sgbPaths.Add(string.Format(fnc, bgFolder, namePrefix));
+
+                //I forgot this method existed. Thanks!
+                thisFence.variants = ReadSgbForVariantInfo(realm, sgbPaths.ToArray());
+
+                fixtures.Add(thisFence.fixtureId, thisFence);
+            }
         }
 
         /// <summary>
@@ -475,6 +568,12 @@ namespace FFXIVHSLauncher
                         }
                     }
 
+                    //Whoops, don't do it for fences
+                    for (int j = 0; j < numTransformsInSmallerBlueprints[(int) FixtureType.fnc - 1].Length; j++)
+                    {
+                        numTransformsInSmallerBlueprints[(int) FixtureType.fnc - 1][j] = 0;
+                    }
+
                     //For every fixture type
                     for (int fixtureTypeIndex = 0; fixtureTypeIndex < numTransformsInSmallerBlueprints.Length; fixtureTypeIndex++)
                     {
@@ -511,76 +610,117 @@ namespace FFXIVHSLauncher
         }
 
         /// <summary>
-        /// Returns a Map containing all modelEntries in the Territory instantiated via
-        /// the given TerritoryType as MapModelEntry objects.
+        /// Returns a Map containing all groups in the Territory instantiated via
+        /// the given TerritoryType.
         /// </summary>
         /// <param name="teriType"></param>
         /// <returns></returns>
         private static Map ReadTerritory(TerritoryType teriType)
         {
             Map map = new Map();
-            Territory teri = new Territory(teriType);
-
+            SaintCoinach.Graphics.Territory teri = new SaintCoinach.Graphics.Territory(teriType);
+                        
             if (teri.Terrain != null)
             {
+                MapGroup terrainMapGroup = new MapGroup(MapGroup.GroupType.TERRAIN, "teri");
+                terrainMapGroup.groupTransform = Transform.Empty;
+
                 foreach (TransformedModel mdl in teri.Terrain.Parts)
                 {
                     int modelId = map.TryAddUniqueModel(mdl.Model.ToMapModel());
-                    map.AddMapModelEntry(mdl.ToMapModelEntry(modelId));
+                    terrainMapGroup.AddEntry(mdl.ToMapModelEntry(modelId));
                 }
+                map.AddMapGroup(terrainMapGroup);
             }
             
-            /* ???
-            if (teri.LgbFiles.Length == 0)
-                return null; */
-
             foreach (LgbFile lgbFile in teri.LgbFiles)
             {
                 var validGroups = lgbFile.Groups.Where(_ => !EventCheck(_.Name)).Select(_ => _);
 
                 foreach (LgbGroup lgbGroup in validGroups)
                 {
+                    MapGroup lgbMapGroup = new MapGroup(MapGroup.GroupType.LGB, lgbGroup.Name);
+                    lgbMapGroup.groupTransform = Transform.Empty;
+                    
                     foreach (var mdl in lgbGroup.Entries.OfType<LgbModelEntry>())
                     {
-                        //TransformedModels do not inherit LgbModelEntry header transform data
                         int modelId = map.TryAddUniqueModel(mdl.Model.Model.ToMapModel());
-                        map.AddMapModelEntry(mdl.Model.ToMapModelEntry(modelId));
+                        lgbMapGroup.AddEntry(mdl.Model.ToMapModelEntry(modelId));
                     }
 
                     foreach (var gim in lgbGroup.Entries.OfType<LgbGimmickEntry>())
                     {
-                        Transform t = TransformFromVectors(gim.Header.Translation, gim.Header.Rotation,
-                            gim.Header.Scale);
-                        ParseRecursiveSgb(gim.Gimmick, t, ref map);
-                    }
+                        MapGroup gimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(gim.Name, gim.Gimmick.File.Path));
+                        gimMapGroup.groupTransform = TransformFromGimmickHeader(gim.Header);
 
+                        AddSgbModelsToMap(ref map, ref gimMapGroup, gim.Gimmick);
+
+                        foreach (var rootGimGroup in gim.Gimmick.Data.OfType<SgbGroup>())
+                        {
+                            foreach (var rootGimEntry in rootGimGroup.Entries.OfType<SgbGimmickEntry>())
+                            {
+                                if (rootGimEntry.Gimmick != null)
+                                {
+                                    MapGroup rootGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(rootGimEntry.Name, rootGimEntry.Gimmick.File.Path));
+                                    rootGimMapGroup.groupTransform = TransformFromGimmickHeader(rootGimEntry.Header);
+                                    
+                                    AddSgbModelsToMap(ref map, ref rootGimMapGroup, rootGimEntry.Gimmick);
+                                    
+                                    foreach (var subGimGroup in rootGimEntry.Gimmick.Data.OfType<SgbGroup>())
+                                    {
+                                        foreach (var subGimEntry in subGimGroup.Entries.OfType<SgbGimmickEntry>())
+                                        {
+                                            MapGroup subGimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(subGimEntry.Name, subGimEntry.Gimmick.File.Path));
+                                            subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
+
+                                            AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
+
+                                            rootGimMapGroup.AddGroup(subGimMapGroup);
+                                        }
+                                    }
+                                    gimMapGroup.AddGroup(rootGimMapGroup);
+                                }
+                            }
+                        }
+                        lgbMapGroup.AddGroup(gimMapGroup);
+                    }
+                    map.AddMapGroup(lgbMapGroup);
                 }
             }
-
             return map;
         }
 
         /// <summary>
-        /// Parses an SgbFile for model entries or further gimmicks, and adds modelEntries
-        /// to the given List&lt;MapModelEntry&gt;.
+        /// Returns the gimmick group name if not empty. If it is empty,
+        /// returns the gimmick's filename without extension.
+        /// </summary>
+        /// <param name="gimmickName"></param>
+        /// <param name="gimmickPath"></param>
+        /// <returns></returns>
+        private static string GetGimmickName(string gimmickName, string gimmickPath)
+        {
+            if (String.IsNullOrEmpty(gimmickName))
+            {
+                return gimmickPath.Substring(gimmickPath.LastIndexOf('/') + 1).Replace(".sgb", "");
+            }
+            return gimmickName;
+        }
+
+        /// <summary>
+        /// Parses an SgbFile for model entries or further gimmicks, and adds groups
+        /// to the given MapGroup.
         /// </summary>
         /// <param name="file"></param>
         /// <param name="parent"></param>
         /// <param name="models"></param>
-        private static void ParseRecursiveSgb(SgbFile file, Transform parent, ref Map map)
+        private static void AddSgbModelsToMap(ref Map map, ref MapGroup mg, SgbFile file)
         {
             foreach (var sgbGroup in file.Data.OfType<SgbGroup>())
             {
                 foreach (var mdl in sgbGroup.Entries.OfType<SgbModelEntry>())
                 {
                     int modelId = map.TryAddUniqueModel(mdl.Model.Model.ToMapModel());
-                    map.AddMapModelEntry(mdl.Model.ToMapModelEntry(modelId, parent));
-                }
-                
-                foreach (var gim in sgbGroup.Entries.OfType<SgbGimmickEntry>())
-                {
-                    Transform p = TransformFromVectors(gim.Header.Translation, gim.Header.Rotation, gim.Header.Scale);
-                    ParseRecursiveSgb(gim.Gimmick, p, ref map);
+                    mg.AddEntry(mdl.Model.ToMapModelEntry(modelId));
                 }
             }
         }
@@ -632,6 +772,7 @@ namespace FFXIVHSLauncher
             }
 
             Dictionary<int, HousingExteriorFixture> fixtures = ReadHousingExteriorSheet(realm);
+            AddDefaultFences(realm, ref fixtures);
 
             string json = JsonConvert.SerializeObject(fixtures, Formatting.Indented);
 
