@@ -30,8 +30,8 @@ public sealed class FastObjImporter
     private List<int> intArray;
     private List<Color32> colors;
  
-    private const int MIN_POW_10 = -16;
-    private const int MAX_POW_10 = 16;
+    private const int MIN_POW_10 = -32;
+    private const int MAX_POW_10 = 32;
     private const int NUM_POWS_10 = MAX_POW_10 - MIN_POW_10 + 1;
     private static readonly float[] pow10 = GenerateLookupTable();
  
