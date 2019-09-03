@@ -141,7 +141,7 @@ namespace FFXIVHSLauncher
             sw.WriteLine("#texcoords");
             foreach (Vector4 texCoord in vtList)
             {
-                sw.WriteLine("vt {0} {1} {2} {3}", (decimal)texCoord.X, (decimal)texCoord.Y, (decimal)texCoord.W, (decimal)texCoord.Z);
+                sw.WriteLine("vt {0} {1} {2} {3}", (decimal)texCoord.X, -1 * (decimal)texCoord.Y, (decimal)texCoord.W, -1 * (decimal)texCoord.Z);
             }
             
             sw.WriteLine();
