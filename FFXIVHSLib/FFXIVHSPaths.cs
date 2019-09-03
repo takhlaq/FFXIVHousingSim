@@ -59,11 +59,36 @@ namespace FFXIVHSLib
             return path;
         }
 
+        public static string GetTerritoryDirectory(string territory)
+        {
+            string path = Path.Combine(root, territory.ToLowerInvariant() + "\\");
+
+            CreateDirectoryIfNotExists(path);
+
+            return path;
+        }
+
         public static string GetTerritoryObjectsDirectory(Territory territory)
         {
             string path = Path.Combine(GetTerritoryDirectory(territory), "objects\\");
 
             CreateDirectoryIfNotExists(path);
+
+            return path;
+        }
+
+        public static string GetTerritoryObjectsDirectory(string territory)
+        {
+            string path = Path.Combine(GetTerritoryDirectory(territory), "objects\\");
+
+            CreateDirectoryIfNotExists(path);
+
+            return path;
+        }
+
+        public static string GetTerritoryJson(string territory)
+        {
+            string path = Path.Combine(GetTerritoryDirectory(territory), territory.ToLowerInvariant() + ".json");
 
             return path;
         }

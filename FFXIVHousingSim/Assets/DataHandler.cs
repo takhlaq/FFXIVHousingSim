@@ -43,6 +43,35 @@ public static class DataHandler
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
 
     private static Territory _territory = (Territory) 999;
+    private static string _teriStr;
+
+    public static string teriStr
+    {
+        get { return _teriStr; }
+        set
+        {
+            if (_teriStr == value)
+                return;
+
+            _teriStr = value;
+
+            Debug.LogFormat("Territory changed to {0}", value);
+
+            //TODO: When events implemented make this an event
+            //CameraHandler[] c = Resources.FindObjectsOfTypeAll<CameraHandler>();
+            //c[0]._territory = null;
+
+            GameObject[] currentGameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+
+            //Destroy old objects
+            if (currentGameObjects.Length > defaultGameObjects.Length)
+                foreach (GameObject obj in currentGameObjects)
+                    if (!defaultGameObjects.Contains(obj))
+                        UnityEngine.Object.Destroy(obj);
+
+            LoadTerritory();
+        }
+    }
     public static Territory territory
     {
         get { return _territory; }
@@ -210,8 +239,9 @@ public static class DataHandler
 
     private static void LoadMapTerrainInfo()
     {
-        string jsonText = File.ReadAllText(FFXIVHSPaths.GetTerritoryJson(territory));
-
+        UnityEngine.Debug.Log(teriStr);//
+        string jsonText = File.ReadAllText(FFXIVHSPaths.GetTerritoryJson(teriStr));
+        //
         _map = JsonConvert.DeserializeObject<Map>(jsonText);
 	    Debug.Log("_map loaded.");
     }
@@ -222,7 +252,7 @@ public static class DataHandler
 
         _modelMeshes = new Dictionary<int, Mesh[]>();
 
-	    string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(territory);
+	    string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(_teriStr);
         
         foreach (MapModel model in _map.models.Values)
         {

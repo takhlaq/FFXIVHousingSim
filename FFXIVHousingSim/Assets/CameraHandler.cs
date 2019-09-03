@@ -90,7 +90,7 @@ public class CameraHandler : MonoBehaviour
     
     private void UpdatePlotView()
     {
-        _centeredPlot = DataHandler.GetPlot(_territory, _plotView, _subdiv);
+        //_centeredPlot = DataHandler.GetPlot(_territory, _plotView, _subdiv);
         //Debug.LogFormat("Plot {0} selected at {1} {2} {3}", _centeredPlot.index,
         //    _centeredPlot.position.x, _centeredPlot.position.y, _centeredPlot.position.z);
 
