@@ -7,13 +7,13 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="477" Width="827">
     <Grid Margin="0,0,-0.4,0" Height="447" VerticalAlignment="Top">
-        <Button x:Name="openButton" Content="Extract" HorizontalAlignment="Left" Margin="696,359,0,0" VerticalAlignment="Top" Width="88" Height="23" Click="openButton_Click"/>
+        <Button x:Name="openButton" Content="Extract" HorizontalAlignment="Left" Margin="696,317,0,0" VerticalAlignment="Top" Width="88" Height="23" Click="openButton_Click"/>
         <ListBox x:Name="placeBox" HorizontalAlignment="Left" Height="313" Margin="453,41,0,0" VerticalAlignment="Top" Width="238" SelectionChanged="placeBox_SelectionChanged"/>
         <Label x:Name="amountLabel" Content="Territories found: " HorizontalAlignment="Left" Margin="453,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="box" HorizontalAlignment="Left" Height="396" Margin="10,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="425" AcceptsReturn="True"/>
         <TextBox x:Name="pathBox" HorizontalAlignment="Left" Height="23" Margin="453,359,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="238" KeyUp="PathBox_KeyUp"/>
         <Label x:Name="existsLabel" Content="" HorizontalAlignment="Left" Margin="453,385,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="packBox" HorizontalAlignment="Left" Height="23" Margin="453,382,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="238"/>
+        <TextBox x:Name="packBox" HorizontalAlignment="Left" Height="23" Margin="453,382,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="238" TextChanged="PackBox_TextChanged"/>
         <Button x:Name="getFilesBtn" Content="Get Files" HorizontalAlignment="Left" Margin="696,35,0,0" VerticalAlignment="Top" Width="113" RenderTransformOrigin="0.301,0.344" Click="getFilesBtn_Click"/>
         <Button x:Name="getObjFilesBtn" Content="Get Obj Files" HorizontalAlignment="Left" Margin="696,107,0,0" VerticalAlignment="Top" Width="113" RenderTransformOrigin="0.285,2.228" Click="getObjFilesBtn_Click"/>
         <Button x:Name="csvButton" Content="Get CSV" HorizontalAlignment="Left" Margin="696,83,0,0" VerticalAlignment="Top" Width="113" Click="csvButton_Click"/>
@@ -31,6 +31,8 @@
         <Button x:Name="BlueprintButton" Content="Blueprints JSON" HorizontalAlignment="Left" Margin="696,220,0,0" VerticalAlignment="Top" Width="113" Click="BlueprintButton_Click"/>
         <Button x:Name="ExtractMapBtn" Content="Extract Map JSON" HorizontalAlignment="Left" Margin="696,148,0,0" VerticalAlignment="Top" Width="113" Click="ExtractMapBtn_Click"/>
         <Label x:Name="SelectedTeriLabel" Content="Selected:" HorizontalAlignment="Left" Margin="583,10,0,0" VerticalAlignment="Top"/>
+        <Label Content="Search" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="696,359,0,0"/>
+        <Label Content="Load Dat Path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="696,379,0,0"/>
 
 
     </Grid>

@@ -628,10 +628,10 @@ namespace FFXIVHSLauncher
         /// </summary>
         /// <param name="teriType"></param>
         /// <returns></returns>
-        private static Map ReadTerritory(TerritoryType teriType)
+        private static Map ReadTerritory(TerritoryType teriType, SaintCoinach.Graphics.Territory teri = null)
         {
             Map map = new Map();
-            SaintCoinach.Graphics.Territory teri = new SaintCoinach.Graphics.Territory(teriType);
+            teri = teri ?? new SaintCoinach.Graphics.Territory(teriType);
                         
             if (teri.Terrain != null)
             {
@@ -895,11 +895,13 @@ namespace FFXIVHSLauncher
             File.WriteAllText(outpath, json);
         }
 
-        public static void WriteMap(ARealmReversed realm, TerritoryType teriType)
+        public static void WriteMap(ARealmReversed realm, TerritoryType teriType, SaintCoinach.Graphics.Territory teri = null)
         {
+            string name = teri != null ? teri.Name : teriType.Name;
+
             //Plot.Ward ward = Plot.StringToWard(teriType.Name);
-            string outdir = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name + "\\");
-            string outpath = Path.Combine(outdir, teriType.Name + ".json");
+            string outdir = Path.Combine(FFXIVHSPaths.GetRootDirectory(), name + "\\");
+            string outpath = Path.Combine(outdir, name + ".json");
 
             //string outpath = FFXIVHSPaths.GetWardJson(ward);
 
@@ -908,22 +910,24 @@ namespace FFXIVHSLauncher
 
             if (File.Exists(outpath))
             {
-                WriteMapModels(realm, teriType);
+                WriteMapModels(realm, teriType, teri);
                 return;
             }
 
-            Map map = ReadTerritory(teriType);
+            Map map = ReadTerritory(teriType, teri);
 
             string json = JsonConvert.SerializeObject(map, Formatting.Indented);
 
             File.WriteAllText(outpath, json);
         }
 
-        public static void WriteMapModels(ARealmReversed realm, TerritoryType teriType)
+        public static void WriteMapModels(ARealmReversed realm, TerritoryType teriType, SaintCoinach.Graphics.Territory teri = null)
         {
+            string name = teri != null ? teri.Name : teriType.Name;
+
             //Plot.Ward ward = Plot.StringToWard(teriType.Name);
-            string outpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name, "objects\\");
-            string inpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriType.Name + "\\", teriType.Name + ".json");
+            string outpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), name, "objects\\");
+            string inpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), name + "\\", name + ".json");
 
             if (!Directory.Exists(outpath))
                 Directory.CreateDirectory(outpath);

@@ -130,6 +130,8 @@ namespace FFXIVHSLauncher
             StringBuilder sb = new StringBuilder(mapPath);
             sb.Append(territoryName + @"\");
 
+            territory = new SaintCoinach.Graphics.Territory((TerritoryType)placeBox.SelectedItem);
+
             String territoryFolder = sb.ToString();
 
             if (!Directory.Exists(territoryFolder))
@@ -858,8 +860,22 @@ namespace FFXIVHSLauncher
         private void ExtractMapBtn_Click(object sender, RoutedEventArgs e)
         {
             TerritoryType t = (TerritoryType) placeBox.SelectedValue;
+            Territory teri = null;
 
-            DataWriter.WriteMap(realm, t);
+            if (!string.IsNullOrEmpty(packBox.Text))
+            {
+                //if (packBox.Text.Contains("bg"))
+                {
+                    var split = packBox.Text.Split('/');
+                    var teriName = split[4];
+
+                    var datPath = packBox.Text.Replace(".lgb", "").Replace("bg/", "");
+
+                    teri = new SaintCoinach.Graphics.Territory(realm.Packs, teriName, datPath);
+                }
+            }
+
+            DataWriter.WriteMap(realm, t, teri);
         }
 
         private void PathBox_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
@@ -882,6 +898,11 @@ namespace FFXIVHSLauncher
                     placeBox.ItemsSource = relevantTerritories;
                 }
             }
+        }
+
+        private void PackBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
         }
     }
 }
