@@ -16,7 +16,7 @@ namespace FFXIVHSLib
     {
         //TODO decide on a main path or make it like a setting or something
         private const string root = @"E:\coding\repositories\ffxiv related\FFXIVHousingSim\Out";
-        private const string GameDirectory = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - A Realm Reborn\";
+        private const string GameDirectory = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - Heavensward\";
 
         private static void CreateDirectoryIfNotExists(string path)
         {
