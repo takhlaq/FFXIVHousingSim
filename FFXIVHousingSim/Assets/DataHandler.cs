@@ -308,6 +308,8 @@ public static class DataHandler
 
                         UnityEngine.Light light = gameLight.AddComponent<UnityEngine.Light>();
 
+                        Debug.LogFormat(hdrLine);
+
                         int offset = 0;
 
                         var lsplit = lines[++offset + i].Split(' ');
@@ -318,18 +320,18 @@ public static class DataHandler
                             var z = Convert.ToSingle(lsplit[3]);
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().localPosition = Vector3.Reflect(pos, Vector3.left);
+                            gameLight.GetComponent<Transform>().localPosition = Vector3.Reflect(pos, Vector3.left);
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1];
                         // rotation
                         {
-                            var x = Convert.ToSingle(lsplit[1]);
-                            var y = Convert.ToSingle(lsplit[2]);
-                            var z = Convert.ToSingle(lsplit[3]);
+                            var x = Convert.ToSingle(lsplit[1]) * UnityEngine.Mathf.Rad2Deg;
+                            var y = Convert.ToSingle(lsplit[2]) * UnityEngine.Mathf.Rad2Deg;
+                            var z = Convert.ToSingle(lsplit[3]) * UnityEngine.Mathf.Rad2Deg;
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(pos);
+                            light.GetComponent<Transform>().rotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.left));
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1];
@@ -340,7 +342,7 @@ public static class DataHandler
                             var z = Convert.ToSingle(lsplit[3]);
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().localScale = Vector3.Reflect(pos, Vector3.left);
+                            gameLight.GetComponent<Transform>().localScale = Vector3.Reflect(pos, Vector3.left);
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1].Trim();
@@ -395,7 +397,7 @@ public static class DataHandler
                             float g = Convert.ToByte(lsplit[2]) / 255;
                             float b = Convert.ToByte(lsplit[3]) / 255;
                             float a = Convert.ToByte(lsplit[4]) / 255;
-                            float intensity = Convert.ToByte(lsplit[5]) / 255;
+                            float intensity = Convert.ToSingle(lsplit[5]);
 
                             light.color = new UnityEngine.Color(r, g, b, a);
                             light.intensity = intensity;
