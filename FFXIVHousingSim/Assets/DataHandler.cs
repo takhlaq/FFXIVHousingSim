@@ -326,12 +326,12 @@ public static class DataHandler
                         line = lsplit[1];
                         // rotation
                         {
-                            var x = Convert.ToSingle(lsplit[1]) * UnityEngine.Mathf.Rad2Deg;
-                            var y = Convert.ToSingle(lsplit[2]) * UnityEngine.Mathf.Rad2Deg;
-                            var z = Convert.ToSingle(lsplit[3]) * UnityEngine.Mathf.Rad2Deg;
+                            float x = Convert.ToSingle(lsplit[1]) * UnityEngine.Mathf.Rad2Deg;
+                            float y = Convert.ToSingle(lsplit[2]) * UnityEngine.Mathf.Rad2Deg;
+                            float z = Convert.ToSingle(lsplit[3]) * UnityEngine.Mathf.Rad2Deg;
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().rotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.left));
+                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.right));
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1];
@@ -370,9 +370,19 @@ public static class DataHandler
                         }
 
                         // Attenuation
-                        ++offset;
+                        float attenuation = 1.0f;
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        {
+                            //attenuation = Convert.ToSingle(lsplit[1]);
+                        }
+
                         // RangeRate
-                        ++offset;
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        {
+                            //light.range = attenuation * Convert.ToSingle(lsplit[1]);
+                        }
                         // PointLightType
                         ++offset;
                         // AttenuationConeCoefficient
@@ -393,11 +403,11 @@ public static class DataHandler
                         Debug.LogFormat(lsplit[0]);
                         // ColorHDRI
                         {
-                            float r = Convert.ToByte(lsplit[1]) / 255;
-                            float g = Convert.ToByte(lsplit[2]) / 255;
-                            float b = Convert.ToByte(lsplit[3]) / 255;
-                            float a = Convert.ToByte(lsplit[4]) / 255;
                             float intensity = Convert.ToSingle(lsplit[5]);
+                            float a = Convert.ToByte(lsplit[4]) / 255.0f;
+                            float b = Convert.ToByte(lsplit[3]) / 255.0f;
+                            float g = Convert.ToByte(lsplit[2]) / 255.0f;
+                            float r = Convert.ToByte(lsplit[1]) / 255.0f;
 
                             light.color = new UnityEngine.Color(r, g, b, a);
                             light.intensity = intensity;
