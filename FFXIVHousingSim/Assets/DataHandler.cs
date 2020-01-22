@@ -289,7 +289,7 @@ public static class DataHandler
     {
         string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(_teriStr);
 
-        var files = System.IO.Directory.GetFiles(objectsFolder, "*lights.txt");
+        var files = System.IO.Directory.GetFiles(objectsFolder, "*.txt");
         foreach (var filename in files)
         {
             var lines = File.ReadAllLines(filename);
@@ -301,8 +301,8 @@ public static class DataHandler
                         continue;
 
                     var hdrLine = lines[i];
-
-                    if (hdrLine.Contains("LGB") || hdrLine.Contains("SGB"))
+                    bool isSgb = hdrLine.Contains("SGB");
+                    if (hdrLine.Contains("LGB") || isSgb)
                     {
                         UnityEngine.GameObject gameLight = new GameObject(hdrLine);
 
@@ -331,7 +331,7 @@ public static class DataHandler
                             float z = Convert.ToSingle(lsplit[3]) * UnityEngine.Mathf.Rad2Deg;
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.right));
+                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.left));
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1];
@@ -343,6 +343,12 @@ public static class DataHandler
 
                             UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
                             gameLight.GetComponent<Transform>().localScale = Vector3.Reflect(pos, Vector3.left);
+
+                            if (x != 1.0f && x != -1.0f)
+                            {
+                                light.areaSize = new UnityEngine.Vector2(x, y);
+                                //light.range = x;
+                            }
                         }
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1].Trim();
@@ -358,6 +364,9 @@ public static class DataHandler
                                 light.type = UnityEngine.LightType.Directional;
                             else if (line == "Line" || line == "Plane")
                                 light.type = UnityEngine.LightType.Rectangle;
+                            else
+                                light.type = UnityEngine.LightType.Point;
+
                             /*  
                              *  ffxiv types
                                 Directional,
