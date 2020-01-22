@@ -281,11 +281,148 @@ public static class DataHandler
 		    foreach (MapGroup group in _map.groups.Values)
 			    LoadMapGroup(group);
 	    }
-	    
+        LoadLights();
 	    //LoadLandset();
     }
 
-	private static void LoadMapGroup(MapGroup group, GameObject parent = null)
+    private static void LoadLights()
+    {
+        string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(_teriStr);
+
+        var files = System.IO.Directory.GetFiles(objectsFolder, "*lights.txt");
+        foreach (var filename in files)
+        {
+            var lines = File.ReadAllLines(filename);
+            if (lines.Length > 1)
+            {
+                for (var i = 0; i < lines.Length; ++i)
+                {
+                    if (string.IsNullOrEmpty(lines[i]) || string.IsNullOrWhiteSpace(lines[i]))
+                        continue;
+
+                    var hdrLine = lines[i];
+
+                    if (hdrLine.Contains("LGB") || hdrLine.Contains("SGB"))
+                    {
+                        UnityEngine.GameObject gameLight = new GameObject(hdrLine);
+
+                        UnityEngine.Light light = gameLight.AddComponent<UnityEngine.Light>();
+
+                        int offset = 0;
+
+                        var lsplit = lines[++offset + i].Split(' ');
+                        var line = lsplit[1];
+                        {
+                            var x = Convert.ToSingle(lsplit[1]);
+                            var y = Convert.ToSingle(lsplit[2]);
+                            var z = Convert.ToSingle(lsplit[3]);
+
+                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
+                            light.GetComponent<Transform>().localPosition = Vector3.Reflect(pos, Vector3.left);
+                        }
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        // rotation
+                        {
+                            var x = Convert.ToSingle(lsplit[1]);
+                            var y = Convert.ToSingle(lsplit[2]);
+                            var z = Convert.ToSingle(lsplit[3]);
+
+                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
+                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(pos);
+                        }
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        // scale
+                        {
+                            var x = Convert.ToSingle(lsplit[1]);
+                            var y = Convert.ToSingle(lsplit[2]);
+                            var z = Convert.ToSingle(lsplit[3]);
+
+                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
+                            light.GetComponent<Transform>().localScale = Vector3.Reflect(pos, Vector3.left);
+                        }
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1].Trim();
+                        // LightType
+                        {
+                            line = line.Replace("LightType", "");
+
+                            if (line == "Point")
+                                light.type = UnityEngine.LightType.Point;
+                            else if (line == "Spot")
+                                light.type = UnityEngine.LightType.Spot;
+                            else if (line == "Directional")
+                                light.type = UnityEngine.LightType.Directional;
+                            else if (line == "Line" || line == "Plane")
+                                light.type = UnityEngine.LightType.Rectangle;
+                            /*  
+                             *  ffxiv types
+                                Directional,
+                                Point,
+                                Spot,
+                                Plane,
+                                Line,
+                                FakeSpecular,
+                            */
+                        }
+
+                        // Attenuation
+                        ++offset;
+                        // RangeRate
+                        ++offset;
+                        // PointLightType
+                        ++offset;
+                        // AttenuationConeCoefficient
+                        ++offset;
+                        
+                        // ConeDegree
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        {
+                            light.spotAngle = Convert.ToSingle(lsplit[1]);
+                        }
+
+                        // TexturePath
+                        ++offset;
+
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        Debug.LogFormat(lsplit[0]);
+                        // ColorHDRI
+                        {
+                            float r = Convert.ToByte(lsplit[1]) / 255;
+                            float g = Convert.ToByte(lsplit[2]) / 255;
+                            float b = Convert.ToByte(lsplit[3]) / 255;
+                            float a = Convert.ToByte(lsplit[4]) / 255;
+                            float intensity = Convert.ToByte(lsplit[5]) / 255;
+
+                            light.color = new UnityEngine.Color(r, g, b, a);
+                            light.intensity = intensity;
+                        }
+
+                        // FollowsDirectionalLight
+                        ++offset;
+                        // SpecularEnabled
+                        ++offset;
+                        //BGShadowEnabled
+                        ++offset;
+
+                        lsplit = lines[++offset + i].Split(' ');
+                        line = lsplit[1];
+                        // ShadowClipRange
+                        {
+                            light.shadowNearPlane = Convert.ToSingle(lsplit[1]);
+                        }
+                        i += offset;
+                        gameLight.SetActive(true);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void LoadMapGroup(MapGroup group, GameObject parent = null)
 	{
 		if (group.groupName.Contains("fnc0000"))
 			return;
