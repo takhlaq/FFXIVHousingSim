@@ -304,11 +304,31 @@ public static class DataHandler
                     bool isSgb = hdrLine.Contains("SGB");
                     if (hdrLine.Contains("LGB") || isSgb)
                     {
-                        UnityEngine.GameObject gameLight = new GameObject(hdrLine);
+                        Debug.LogFormat(hdrLine);
 
+                        UnityEngine.GameObject gameLight = new GameObject(hdrLine);
+                        string objPath = Path.Combine(FFXIVHSPaths.GetTerritoryObjectsDirectory(teriStr), hdrLine) + ".obj";
+                        Debug.LogFormat(objPath);
+                        if (File.Exists(objPath))
+                        {
+                            List<Mesh> meshes = new List<Mesh>();
+                            var split = objPath.Split('_');
+                            Debug.LogFormat(split[0]);
+                            var count = Convert.ToInt32(split[3]);
+                            for (var x = 0; x < count; ++x)
+                            {
+                                objPath = split[0] + split[1] + split[2] + "_" + i + "_" + split[4];
+                                Debug.LogFormat(objPath);
+                                var mesh = FastObjImporter.Instance.ImportFile(objPath);
+                                meshes.Add(mesh);
+                            }
+                            gameLight.AddComponent<MeshRenderer>();
+                            gameLight.AddComponent<MeshFilter>();
+
+                            AddMeshToGameObject(meshes.ToArray(), gameLight);
+                        }
                         UnityEngine.Light light = gameLight.AddComponent<UnityEngine.Light>();
 
-                        Debug.LogFormat(hdrLine);
 
                         int offset = 0;
 
@@ -409,7 +429,7 @@ public static class DataHandler
 
                         lsplit = lines[++offset + i].Split(' ');
                         line = lsplit[1];
-                        Debug.LogFormat(lsplit[0]);
+                        //Debug.LogFormat(lsplit[0]);
                         // ColorHDRI
                         {
                             float intensity = Convert.ToSingle(lsplit[5]);
@@ -419,7 +439,7 @@ public static class DataHandler
                             float r = Convert.ToByte(lsplit[1]) / 255.0f;
 
                             light.color = new UnityEngine.Color(r, g, b, a);
-                            light.intensity = intensity;
+                            light.intensity = intensity * 1.25f;
                         }
 
                         // FollowsDirectionalLight

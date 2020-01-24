@@ -215,7 +215,17 @@ public sealed class FastObjImporter
         }
         
         MaterialHandler mtlHandler = MaterialHandler.GetInstance();
-        mtlHandler.LoadMaterial(Path.Combine(fileName.Substring(0, fileName.LastIndexOf(@"\")), mtlFile.ToString().Trim()));
+        Debug.LogFormat(fileName);
+        Debug.LogFormat(mtlFile.ToString());
+
+        try
+        {
+            mtlHandler.LoadMaterial(Path.Combine(fileName.Substring(0, fileName.LastIndexOf(@"\")), mtlFile.ToString().Trim()));
+        }
+        catch(System.Exception e)
+        {
+            mtlHandler.LoadMaterial(mtlFile.ToString());
+        }
         mtlHandler.RegisterMaterialForMesh(meshName, mtlName.ToString().Trim());
 
         if (hasColor)

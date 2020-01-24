@@ -210,6 +210,10 @@ namespace FFXIVHSLib
         /// </summary>
         public Dictionary<int, MapModel> models { get; set; }
 
+        public Dictionary<int, MapLightEntry> lights { get; set; }
+
+        public Dictionary<int, MapVfxEntry> vfx { get; set; }
+
         public void AddMapGroup(MapGroup group)
         {
             if (groups == null)
@@ -243,6 +247,42 @@ namespace FFXIVHSLib
             models.Add(id, model);
             return id;
         }
+
+        public int TryAddUniqueLight(MapLightEntry light)
+        {
+            if (lights == null)
+                lights = new Dictionary<int, MapLightEntry>();
+
+            //Attempt to get light
+            var res = lights.Where(_ => _.Value.Equals(light)).Select(_ => _);
+
+            if (res.Count() == 1)
+                return res.Single().Key;
+
+            int id = lights.Count;
+            light.id = id;
+            lights.Add(id, light);
+
+            return id;
+        }
+
+        public int TryAddUniqueVfx(MapVfxEntry vfxe)
+        {
+            if (this.vfx == null)
+                this.vfx = new Dictionary<int, MapVfxEntry>();
+
+            //Attempt to get vfx
+            var res = vfx.Where(_ => _.Value.Equals(vfxe)).Select(_ => _);
+
+            if (res.Count() == 1)
+                return res.Single().Key;
+
+            int id = this.vfx.Count;
+            vfxe.id = id;
+            this.vfx.Add(id, vfxe);
+
+            return id;
+        }
     }
 
     public class MapGroup
@@ -259,6 +299,8 @@ namespace FFXIVHSLib
 
         public List<MapGroup> groups;
         public List<MapModelEntry> entries;
+        public List<MapLightEntry> lights;
+        public List<MapVfxEntry> vfx;
 
         public MapGroup()
         {
@@ -286,6 +328,22 @@ namespace FFXIVHSLib
 
             entries.Add(mme);
         }
+
+        public void AddEntry(MapLightEntry mle)
+        {
+            if (lights == null)
+                lights = new List<MapLightEntry>();
+
+            lights.Add(mle);
+        }
+
+        public void AddEntry(MapVfxEntry mve)
+        {
+            if (vfx == null)
+                vfx = new List<MapVfxEntry>();
+
+            vfx.Add(mve);
+        }
     }
 
     /// <summary>
@@ -297,6 +355,84 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public int modelId { get; set; }
         public Transform transform { get; set; }
+    }
+
+    public class MapColor
+    {
+        public byte red;
+        public byte green;
+        public byte blue;
+        public byte alpha;
+
+        public override bool Equals(object obj)
+        {
+            if (obj is MapColor)
+            {
+                MapColor l = (MapColor)obj;
+                return l.red == red && l.green == green && l.blue == blue && l.alpha == alpha;
+            }
+            return false;
+        }
+    }
+
+    public class MapVfxEntry
+    {
+        public int id { get; set; }
+        public int layerId { get; set; }
+        public int modelId { get; set; }
+        public Transform transform { get; set; }
+        public string avfxPath { get; set; }
+        public string modelPath { get; set; }
+
+        public float softParticleFadeRange { get; set; }
+        public MapColor color { get; set; }
+        public byte autoPlay { get; set; }
+        public byte noFarClip{ get; set; }
+
+        public float nearFadeStart { get; set; }
+        public float nearFadeEnd { get; set; }
+        public float farFadeStart { get; set; }
+        public float farFadeEnd { get; set; }
+        public float zCorrect { get; set; }
+    }
+
+    public class MapLightEntry
+    {
+        public int id { get; set; }
+        public int layerId { get; set; }
+        public Transform transform { get; set; }
+
+        public string lightType{ get; set; }
+        public float attenuation{ get; set; }
+        public float rangeRate{ get; set; }
+        public string pointLightType{ get; set; }
+        public float attenuationConeCoefficient{ get; set; }
+        public float coneDegree{ get; set; }
+
+        public string texturePath{ get; set; }
+
+        public MapColor color{ get; set; }
+        public float colorIntensity{ get; set; }
+
+        public byte followsDirectionalLight{ get; set; }
+        public byte specularEnabled{ get; set; }
+        public byte bgShadowEnabled{ get; set; }
+        public byte characterShadowEnabled{ get; set; }
+
+        public float shadowClipRange{ get; set; }
+        public float planeLightRotationX{ get; set; }
+        public float planeLightRotationY{ get; set; }
+        public ushort mergeGroupID{ get; set; }
+
+        public override bool Equals(object l)
+        {
+            if (l is MapLightEntry)
+            {
+                MapLightEntry m = (MapLightEntry)l;
+                return transform == m.transform && lightType == m.lightType && color == m.color && colorIntensity == m.colorIntensity;
+            }
+            return false;
+        }
     }
 
     /// <summary>

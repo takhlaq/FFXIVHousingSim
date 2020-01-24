@@ -661,6 +661,22 @@ namespace FFXIVHSLauncher
                         lgbMapGroup.AddEntry(mdl.Model.ToMapModelEntry(modelId));
                     }
 
+                    foreach (var vfx in lgbGroup.Entries.OfType<LgbVfxEntry>())
+                    {
+                        var mv = vfx.ToMapVfxEntry();
+                        int modelId = map.TryAddUniqueModel(vfx.AvfxFile.ToMapModel());
+                        int vfxId = map.TryAddUniqueVfx(mv);
+                        mv.modelId = modelId;
+                        lgbMapGroup.AddEntry(mv);
+                    }
+
+                    foreach (var light in lgbGroup.Entries.OfType<LgbLightEntry>())
+                    {
+                        var ml = light.ToMapLightEntry();
+                        int lightId = map.TryAddUniqueLight(ml);
+                        lgbMapGroup.AddEntry(ml);
+                    }
+
                     foreach (var gim in lgbGroup.Entries.OfType<LgbGimmickEntry>())
                     {
                         MapGroup gimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(gim.Name, gim.Gimmick.File.Path));
@@ -798,6 +814,23 @@ namespace FFXIVHSLauncher
                 {
                     int modelId = map.TryAddUniqueModel(mdl.Model.Model.ToMapModel());
                     mg.AddEntry(mdl.Model.ToMapModelEntry(modelId));
+                }
+
+                foreach (var vfx in sgbGroup.Entries.OfType<SgbVfxEntry>())
+                {
+                    var mv = vfx.ToMapVfxEntry();
+                    int modelId = map.TryAddUniqueModel(vfx.AvfxFile.ToMapModel());
+                    int vfxId = map.TryAddUniqueVfx(mv);
+                    mv.modelId = modelId;
+
+                    mg.AddEntry(mv);
+                }
+
+                foreach (var light in sgbGroup.Entries.OfType<SgbLightEntry>())
+                {
+                    var ml = light.ToMapLightEntry();
+                    int lightId = map.TryAddUniqueLight(ml);
+                    mg.AddEntry(ml);
                 }
             }
         }

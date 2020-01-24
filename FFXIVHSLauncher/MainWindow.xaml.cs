@@ -116,8 +116,10 @@ namespace FFXIVHSLauncher
                 maplist.Clear();
             else
                 maplist = new StringBuilder();
-
-            SelectedTeriLabel.Content = $"{selT.Name} ({selT.Key})";
+            if (selT == null)
+                SelectedTeriLabel.Content = "Selected: ( )";
+            else
+                SelectedTeriLabel.Content = $"{selT.Name} ({selT.Key})";
         }
 
         #region Old code, keeping it here while moving away from it
