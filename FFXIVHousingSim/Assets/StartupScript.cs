@@ -20,7 +20,7 @@ public class StartupScript : MonoBehaviour
 
         //DataHandler.territory = Territory.S1H1;
         //DataHandler.teriStr = "inn_room";
-        DataHandler.teriStr = "f1e6";
+        DataHandler.teriStr = "d2a7";
 		timer.registerEvent("TerritoryLoad");
 
 		Debug.Log("Startupscript finished.");

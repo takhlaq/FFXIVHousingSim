@@ -36,9 +36,9 @@ namespace FFXIVHSLauncher
             }
         }
 
-        private static void WriteAvfxModel(string path, Vector3 t, Vector3 r, Vector3 s, SaintCoinach.Graphics.Avfx.AvfxFile file)
+        private static void WriteAvfxModel(string path, SaintCoinach.Graphics.Avfx.AvfxFile file)
         {
-
+            int invalidCount = 0;
             for (var i = 0; i < file.Models.Count; ++i) 
             {
                 List<Vector3> vsList = new List<Vector3>();
@@ -48,6 +48,11 @@ namespace FFXIVHSLauncher
                 List<Vector3> inList = new List<Vector3>();
 
                 var mesh = file.Models[i];
+                if (mesh.AvfxVertexes.Length == 0)
+                {
+                    ++invalidCount;
+                    continue;
+                }
                 List<ushort> indices = new List<ushort>();
                 foreach (var f in mesh.Indices)
                 {
@@ -58,18 +63,13 @@ namespace FFXIVHSLauncher
                 EnumerateFromVertices(mesh.ConvertedVertexes, ref vsList, ref vcList, ref vtList, ref nmList);
                 EnumerateIndices(indices.ToArray(), ref inList);
 
-                WriteObjectFileForMesh(path, null, file.File.Path, i, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray());
+                WriteObjectFileForMesh(path, null, file.File.Path, i - invalidCount, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray());
             }
         }
 
-        public static void WriteObjectFile(string path, SaintCoinach.Graphics.Lgb.LgbVfxEntry vfx)
+        public static void WriteObjectFile(string path, SaintCoinach.Graphics.Avfx.AvfxFile file)
         {
-            WriteAvfxModel(path, vfx.Header.Translation, vfx.Header.Rotation, vfx.Header.Scale, vfx.AvfxFile);
-        }
-
-        public static void WriteObjectFile(string path, SaintCoinach.Graphics.Sgb.SgbVfxEntry vfx)
-        {
-            WriteAvfxModel(path, vfx.Header.Translation, vfx.Header.Rotation, vfx.Header.Scale, vfx.AvfxFile);
+            WriteAvfxModel(path, file);
         }
 
         private static void EnumerateFromVertices(Vertex[] verts, ref List<Vector3> vsList, ref List<Vector4> vcList, 

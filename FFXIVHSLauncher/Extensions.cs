@@ -233,7 +233,12 @@ namespace FFXIVHSLauncher
             MapModel m = new MapModel();
 
             m.modelName = Path.GetFileNameWithoutExtension(a.File.Path.Substring(a.File.Path.LastIndexOf('/') + 1));
-            m.numMeshes = a.Models.Count;
+            int validMeshes = 0;
+
+            foreach (var mesh in a.Models)
+                if (mesh.AvfxVertexes.Length > 0)
+                    validMeshes++;
+            m.numMeshes = validMeshes;
             m.modelPath = a.File.Path;
 
             return m;

@@ -978,7 +978,12 @@ namespace FFXIVHSLauncher
             foreach (MapModel model in map.models.Values)
             {
                 if (realm.Packs.TryGetFile(model.modelPath, out SaintCoinach.IO.File f))
-                    ObjectFileWriter.WriteObjectFile(outpath, (ModelFile)f);
+                {
+                    if (model.modelPath.Contains("avfx"))
+                        ObjectFileWriter.WriteObjectFile(outpath, new SaintCoinach.Graphics.Avfx.AvfxFile(f));
+                    else
+                        ObjectFileWriter.WriteObjectFile(outpath, (ModelFile)f);
+                }
             }
         }
     }

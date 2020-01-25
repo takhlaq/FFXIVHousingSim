@@ -394,6 +394,12 @@ namespace FFXIVHSLib
         public float farFadeStart { get; set; }
         public float farFadeEnd { get; set; }
         public float zCorrect { get; set; }
+
+        public MapVfxEntry()
+        {
+            transform = new Transform();
+            color = new MapColor();
+        }
     }
 
     public class MapLightEntry
@@ -423,6 +429,12 @@ namespace FFXIVHSLib
         public float planeLightRotationX{ get; set; }
         public float planeLightRotationY{ get; set; }
         public ushort mergeGroupID{ get; set; }
+
+        public MapLightEntry()
+        {
+            transform = new Transform();
+            color = new MapColor();
+        }
 
         public override bool Equals(object l)
         {

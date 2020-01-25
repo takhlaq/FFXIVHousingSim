@@ -281,186 +281,13 @@ public static class DataHandler
 		    foreach (MapGroup group in _map.groups.Values)
 			    LoadMapGroup(group);
 	    }
-        LoadLights();
+        //LoadLights();
 	    //LoadLandset();
     }
 
-    private static void LoadLights()
+    private static void LoadLight(MapLightEntry light)
     {
-        string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(_teriStr);
-
-        var files = System.IO.Directory.GetFiles(objectsFolder, "*.txt");
-        foreach (var filename in files)
-        {
-            var lines = File.ReadAllLines(filename);
-            if (lines.Length > 1)
-            {
-                for (var i = 0; i < lines.Length; ++i)
-                {
-                    if (string.IsNullOrEmpty(lines[i]) || string.IsNullOrWhiteSpace(lines[i]))
-                        continue;
-
-                    var hdrLine = lines[i];
-                    bool isSgb = hdrLine.Contains("SGB");
-                    if (hdrLine.Contains("LGB") || isSgb)
-                    {
-                        Debug.LogFormat(hdrLine);
-
-                        UnityEngine.GameObject gameLight = new GameObject(hdrLine);
-                        string objPath = Path.Combine(FFXIVHSPaths.GetTerritoryObjectsDirectory(teriStr), hdrLine) + ".obj";
-                        Debug.LogFormat(objPath);
-                        if (File.Exists(objPath))
-                        {
-                            List<Mesh> meshes = new List<Mesh>();
-                            var split = objPath.Split('_');
-                            Debug.LogFormat(split[0]);
-                            var count = Convert.ToInt32(split[3]);
-                            for (var x = 0; x < count; ++x)
-                            {
-                                objPath = split[0] + split[1] + split[2] + "_" + i + "_" + split[4];
-                                Debug.LogFormat(objPath);
-                                var mesh = FastObjImporter.Instance.ImportFile(objPath);
-                                meshes.Add(mesh);
-                            }
-                            gameLight.AddComponent<MeshRenderer>();
-                            gameLight.AddComponent<MeshFilter>();
-
-                            AddMeshToGameObject(meshes.ToArray(), gameLight);
-                        }
-                        UnityEngine.Light light = gameLight.AddComponent<UnityEngine.Light>();
-
-
-                        int offset = 0;
-
-                        var lsplit = lines[++offset + i].Split(' ');
-                        var line = lsplit[1];
-                        {
-                            var x = Convert.ToSingle(lsplit[1]);
-                            var y = Convert.ToSingle(lsplit[2]);
-                            var z = Convert.ToSingle(lsplit[3]);
-
-                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            gameLight.GetComponent<Transform>().localPosition = Vector3.Reflect(pos, Vector3.left);
-                        }
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        // rotation
-                        {
-                            float x = Convert.ToSingle(lsplit[1]) * UnityEngine.Mathf.Rad2Deg;
-                            float y = Convert.ToSingle(lsplit[2]) * UnityEngine.Mathf.Rad2Deg;
-                            float z = Convert.ToSingle(lsplit[3]) * UnityEngine.Mathf.Rad2Deg;
-
-                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            light.GetComponent<Transform>().localRotation = Quaternion.Euler(Vector3.Reflect(pos, Vector3.left));
-                        }
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        // scale
-                        {
-                            var x = Convert.ToSingle(lsplit[1]);
-                            var y = Convert.ToSingle(lsplit[2]);
-                            var z = Convert.ToSingle(lsplit[3]);
-
-                            UnityEngine.Vector3 pos = new UnityEngine.Vector3(x, y, z);
-                            gameLight.GetComponent<Transform>().localScale = Vector3.Reflect(pos, Vector3.left);
-
-                            if (x != 1.0f && x != -1.0f)
-                            {
-                                light.areaSize = new UnityEngine.Vector2(x, y);
-                                //light.range = x;
-                            }
-                        }
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1].Trim();
-                        // LightType
-                        {
-                            line = line.Replace("LightType", "");
-
-                            if (line == "Point")
-                                light.type = UnityEngine.LightType.Point;
-                            else if (line == "Spot")
-                                light.type = UnityEngine.LightType.Spot;
-                            else if (line == "Directional")
-                                light.type = UnityEngine.LightType.Directional;
-                            else if (line == "Line" || line == "Plane")
-                                light.type = UnityEngine.LightType.Rectangle;
-                            else
-                                light.type = UnityEngine.LightType.Point;
-
-                            /*  
-                             *  ffxiv types
-                                Directional,
-                                Point,
-                                Spot,
-                                Plane,
-                                Line,
-                                FakeSpecular,
-                            */
-                        }
-
-                        // Attenuation
-                        float attenuation = 1.0f;
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        {
-                            //attenuation = Convert.ToSingle(lsplit[1]);
-                        }
-
-                        // RangeRate
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        {
-                            //light.range = attenuation * Convert.ToSingle(lsplit[1]);
-                        }
-                        // PointLightType
-                        ++offset;
-                        // AttenuationConeCoefficient
-                        ++offset;
-                        
-                        // ConeDegree
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        {
-                            light.spotAngle = Convert.ToSingle(lsplit[1]);
-                        }
-
-                        // TexturePath
-                        ++offset;
-
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        //Debug.LogFormat(lsplit[0]);
-                        // ColorHDRI
-                        {
-                            float intensity = Convert.ToSingle(lsplit[5]);
-                            float a = Convert.ToByte(lsplit[4]) / 255.0f;
-                            float b = Convert.ToByte(lsplit[3]) / 255.0f;
-                            float g = Convert.ToByte(lsplit[2]) / 255.0f;
-                            float r = Convert.ToByte(lsplit[1]) / 255.0f;
-
-                            light.color = new UnityEngine.Color(r, g, b, a);
-                            light.intensity = intensity * 1.25f;
-                        }
-
-                        // FollowsDirectionalLight
-                        ++offset;
-                        // SpecularEnabled
-                        ++offset;
-                        //BGShadowEnabled
-                        ++offset;
-
-                        lsplit = lines[++offset + i].Split(' ');
-                        line = lsplit[1];
-                        // ShadowClipRange
-                        {
-                            light.shadowNearPlane = Convert.ToSingle(lsplit[1]);
-                        }
-                        i += offset;
-                        gameLight.SetActive(true);
-                    }
-                }
-            }
-        }
+        
     }
 
     private static void LoadMapGroup(MapGroup group, GameObject parent = null)
@@ -504,6 +331,101 @@ public static class DataHandler
 				obj.SetActive(true);
 			}	
 		}
+
+        if (group.lights != null && group.lights.Count > 0)
+        {
+            foreach (MapLightEntry entry in group.lights)
+            {
+                UnityEngine.GameObject obj = new UnityEngine.GameObject("LIGHT_" + entry.id + "_" + entry.layerId);
+
+                obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+                obj.GetComponent<Transform>().localPosition = entry.transform.translation;
+                obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
+                obj.GetComponent<Transform>().localScale = entry.transform.scale;
+
+                UnityEngine.Light light = obj.AddComponent<UnityEngine.Light>();
+                float x = entry.transform.scale.x;
+                
+                if (x != 1.0f && x != -1.0f)
+                    light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.transform.scale.y);
+
+                // LightType
+                {
+                    if (entry.lightType == "Point")
+                        light.type = UnityEngine.LightType.Point;
+                    else if (entry.lightType == "Spot")
+                        light.type = UnityEngine.LightType.Spot;
+                    else if (entry.lightType == "Directional")
+                        light.type = UnityEngine.LightType.Directional;
+                    else if (entry.lightType == "Line" || entry.lightType == "Plane")
+                        light.type = UnityEngine.LightType.Rectangle;
+                    else
+                        light.type = UnityEngine.LightType.Point;
+
+                    /*  Directional, Point, Spot, Plane, Line, FakeSpecular, */
+                }
+
+                // Attenuation
+                // RangeRate
+                // PointLightType
+                // AttenuationConeCoefficient
+                // ConeDegree
+                light.spotAngle = entry.coneDegree;
+
+                // ColorHDRI
+                float intensity = entry.colorIntensity;
+                float a = entry.color.alpha / 255.0f;
+                float b = entry.color.blue / 255.0f;
+                float g = entry.color.green / 255.0f;
+                float r = entry.color.red / 255.0f;
+
+                light.color = new UnityEngine.Color(r, g, b, a);
+                light.intensity = intensity * 1.25f;
+
+                // FollowsDirectionalLight
+                // SpecularEnabled
+                // BGShadowEnabled
+
+                // ShadowClipRange
+                light.shadowNearPlane = entry.shadowClipRange;
+
+                obj.SetActive(true);
+            }
+        }
+
+        if (group.vfx != null && group.vfx.Count > 0)
+        {
+            foreach (MapVfxEntry entry in group.vfx)
+            {
+                Mesh[] meshes = _modelMeshes[entry.modelId];
+                GameObject obj = AddMeshToNewGameObject(meshes, true);
+
+                obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath));
+
+                obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+                obj.GetComponent<Transform>().localPosition = entry.transform.translation;
+                obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
+                obj.GetComponent<Transform>().localScale = entry.transform.scale;
+
+                UnityEngine.Light light = obj.AddComponent<UnityEngine.Light>();
+                float x = entry.transform.scale.x;
+
+                if (x != 1.0f && x != -1.0f)
+                    light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.transform.scale.y);
+
+                //float intensity = entry.colorIntensity;
+                float a = entry.color.alpha / 255.0f;
+                float b = entry.color.blue / 255.0f;
+                float g = entry.color.green / 255.0f;
+                float r = entry.color.red / 255.0f;
+
+                light.color = new UnityEngine.Color(r, g, b, a);
+                light.intensity = 1.25f;
+                light.type = UnityEngine.LightType.Point;
+
+                obj.SetActive(true);
+            }
+        }
 
 		if (group.groups != null && group.groups.Count > 0)
 		{
