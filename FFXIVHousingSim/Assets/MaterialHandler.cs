@@ -195,7 +195,7 @@ public class MaterialHandler
 		
 //		if (!DebugLoadFiles)
 //			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
-		if (!_materialDictionary.ContainsKey(thisMaterial.name))
+		//if (!_materialDictionary.ContainsKey(thisMaterial.name))
 			_materialDictionary.Add(thisMaterial.name, thisMaterial);
 		return true;
 	}

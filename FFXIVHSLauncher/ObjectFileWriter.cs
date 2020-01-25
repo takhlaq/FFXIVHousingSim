@@ -63,7 +63,7 @@ namespace FFXIVHSLauncher
                 EnumerateFromVertices(mesh.ConvertedVertexes, ref vsList, ref vcList, ref vtList, ref nmList);
                 EnumerateIndices(indices.ToArray(), ref inList);
 
-                WriteObjectFileForMesh(path, null, file.File.Path, i - invalidCount, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray());
+                WriteObjectFileForMesh(path, null, file.File.Path.Replace("avfx","mtrl"), i - invalidCount, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray(), file.TexturePaths);
             }
         }
 
@@ -134,7 +134,7 @@ namespace FFXIVHSLauncher
         }
 
         private static void WriteObjectFileForMesh(String path, Material mat, string modelName, int meshNumber, List<Vector3> vsList, 
-                                            List<Vector4> vcList, List<Vector4> vtList, List<Vector3> nmList, List<Vector3> inList, SaintCoinach.Imaging.ImageFile[] textures = null)
+                                            List<Vector4> vcList, List<Vector4> vtList, List<Vector3> nmList, List<Vector3> inList, SaintCoinach.Imaging.ImageFile[] textures = null, List<string> texturePaths = null)
         {
             int finalSep = modelName.LastIndexOf('/');
             modelName = modelName.Substring(finalSep);
@@ -146,7 +146,7 @@ namespace FFXIVHSLauncher
 
             //mtl
             string mtlPath = @"..\textures\";
-            string mtlName = mat == null ? modelName : mat.Definition.Name;
+            string mtlName = mat == null ? modelName.Replace(".obj", ".mtrl") : mat.Definition.Name;
 
             int mtlFinalSep = mtlName.LastIndexOf('/');
             mtlName = mtlName.Substring(mtlFinalSep + 1);
@@ -156,7 +156,7 @@ namespace FFXIVHSLauncher
             sw.WriteLine("mtllib {0}", mtlPath);
             sw.WriteLine("usemtl {0}", mtlName.Replace(".mtl", ""));
 
-            WriteMaterial(Path.GetFullPath(Path.Combine(path, mtlPath)), mtlName, mat, textures);
+            WriteMaterial(Path.GetFullPath(Path.Combine(path, mtlPath)), mtlName, mat, textures, texturePaths);
 
             //verts
             sw.WriteLine("#vert");
@@ -196,7 +196,7 @@ namespace FFXIVHSLauncher
             sw.Close();
         }
 
-        private static void WriteMaterial(String mtlPath, String mtlFileName, Material mat, SaintCoinach.Imaging.ImageFile[] textures = null)
+        private static void WriteMaterial(String mtlPath, String mtlFileName, Material mat, SaintCoinach.Imaging.ImageFile[] textures = null, List<string> texturePaths = null)
         {
             if (File.Exists(mtlPath))
                 return;
@@ -211,14 +211,19 @@ namespace FFXIVHSLauncher
             matLines.Add("newmtl " + mtlFileName.Substring(0, mtlFileName.Length - 4));
 
             if (mat != null)
-                textures = mat.TexturesFiles;
-
-            foreach (var img in textures)
             {
-                String imgName = img.Path;
+                textures = mat.TexturesFiles;
+                texturePaths = new List<string>();
+                foreach (var t in textures)
+                    texturePaths.Add(t.Path);
+            }
+            for (var i = 0; i < textures.Length; ++i)
+            {
+                var img = textures[i];
+                String imgName = texturePaths[i];
                 int imgLastSep = imgName.LastIndexOf('/');
                 imgName = imgName.Substring(imgLastSep + 1);
-                imgName = imgName.Replace(".tex", ".dds");
+                imgName = imgName.Replace(".atex", "_d.dds").Replace(".tex", ".dds");
 
                 //Write the image out
                 if (!File.Exists(mtlFolder + imgName))

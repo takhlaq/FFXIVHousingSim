@@ -218,13 +218,14 @@ public sealed class FastObjImporter
         Debug.LogFormat(fileName);
         Debug.LogFormat(mtlFile.ToString());
 
-        try
+        //try
         {
             mtlHandler.LoadMaterial(Path.Combine(fileName.Substring(0, fileName.LastIndexOf(@"\")), mtlFile.ToString().Trim()));
         }
-        catch(System.Exception e)
+       // catch(System.Exception e)
         {
-            mtlHandler.LoadMaterial(mtlFile.ToString());
+       //     Debug.LogFormat(e.Message);
+       //     mtlHandler.LoadMaterial(mtlFile.ToString());
         }
         mtlHandler.RegisterMaterialForMesh(meshName, mtlName.ToString().Trim());
 
