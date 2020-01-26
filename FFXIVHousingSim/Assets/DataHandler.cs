@@ -400,7 +400,10 @@ public static class DataHandler
                 foreach (var modelId in entry.modelIds)
                 {
                     Mesh[] meshes = _modelMeshes[modelId];
-                    GameObject obj = AddMeshToNewGameObject(meshes, true);
+                    // uncomment to try load avfx meshes
+                    //GameObject obj = AddMeshToNewGameObject(meshes, true);
+
+                    GameObject obj = new GameObject();
 
                     obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath) + "_" + modelId);
 
