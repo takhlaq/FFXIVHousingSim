@@ -664,9 +664,15 @@ namespace FFXIVHSLauncher
                     foreach (var vfx in lgbGroup.Entries.OfType<LgbVfxEntry>())
                     {
                         var mv = vfx.ToMapVfxEntry();
-                        int modelId = map.TryAddUniqueModel(vfx.AvfxFile.ToMapModel());
-                        int vfxId = map.TryAddUniqueVfx(mv);
-                        mv.modelId = modelId;
+                        foreach (var mdl in vfx.AvfxFile.Models)
+                        {
+                            if (mdl.AvfxVertexes.Length == 0)
+                                continue;
+
+                            int modelId = map.TryAddUniqueModel(mdl.ToMapModel());
+                            int vfxId = map.TryAddUniqueVfx(mv);
+                            mv.modelIds.Add(modelId);
+                        }
                         lgbMapGroup.AddEntry(mv);
                     }
 
@@ -819,10 +825,15 @@ namespace FFXIVHSLauncher
                 foreach (var vfx in sgbGroup.Entries.OfType<SgbVfxEntry>())
                 {
                     var mv = vfx.ToMapVfxEntry();
-                    int modelId = map.TryAddUniqueModel(vfx.AvfxFile.ToMapModel());
-                    int vfxId = map.TryAddUniqueVfx(mv);
-                    mv.modelId = modelId;
+                    foreach (var mdl in vfx.AvfxFile.Models)
+                    {
+                        if (mdl.AvfxVertexes.Length == 0)
+                            continue;
 
+                        int modelId = map.TryAddUniqueModel(mdl.ToMapModel());
+                        int vfxId = map.TryAddUniqueVfx(mv);
+                        mv.modelIds.Add(modelId);
+                    }
                     mg.AddEntry(mv);
                 }
 
@@ -930,6 +941,10 @@ namespace FFXIVHSLauncher
 
         public static void WriteMap(ARealmReversed realm, TerritoryType teriType, SaintCoinach.Graphics.Territory teri = null)
         {
+            if (teri == null && teriType == null)
+            {
+                return;
+            }
             string name = teri != null ? teri.Name : teriType.Name;
 
             //Plot.Ward ward = Plot.StringToWard(teriType.Name);
@@ -977,9 +992,11 @@ namespace FFXIVHSLauncher
 
             foreach (MapModel model in map.models.Values)
             {
-                if (realm.Packs.TryGetFile(model.modelPath, out SaintCoinach.IO.File f))
+                var path = string.IsNullOrEmpty(model.avfxFilePath) ? model.modelPath : model.avfxFilePath;
+
+                if (realm.Packs.TryGetFile(path, out SaintCoinach.IO.File f))
                 {
-                    if (model.modelPath.Contains("avfx"))
+                    if (path.Contains("avfx"))
                         ObjectFileWriter.WriteObjectFile(outpath, new SaintCoinach.Graphics.Avfx.AvfxFile(f));
                     else
                         ObjectFileWriter.WriteObjectFile(outpath, (ModelFile)f);

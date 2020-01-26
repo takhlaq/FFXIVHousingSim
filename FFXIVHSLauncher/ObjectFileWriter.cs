@@ -48,6 +48,7 @@ namespace FFXIVHSLauncher
                 List<Vector3> inList = new List<Vector3>();
 
                 var mesh = file.Models[i];
+                var mdlPath = "./" + mesh.Name + ".mtrl";
                 if (mesh.AvfxVertexes.Length == 0)
                 {
                     ++invalidCount;
@@ -63,7 +64,7 @@ namespace FFXIVHSLauncher
                 EnumerateFromVertices(mesh.ConvertedVertexes, ref vsList, ref vcList, ref vtList, ref nmList);
                 EnumerateIndices(indices.ToArray(), ref inList);
 
-                WriteObjectFileForMesh(path, null, file.File.Path.Replace("avfx","mtrl"), i - invalidCount, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray(), file.TexturePaths);
+                WriteObjectFileForMesh(path, null, mdlPath, 0, vsList, vcList, vtList, nmList, inList, file.Textures.ToArray(), file.TexturePaths);
             }
         }
 

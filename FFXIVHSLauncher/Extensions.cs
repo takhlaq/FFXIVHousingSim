@@ -244,6 +244,18 @@ namespace FFXIVHSLauncher
             return m;
         }
 
+        public static MapModel ToMapModel(this SaintCoinach.Graphics.Avfx.AvfxModelEntry mdl)
+        {
+            MapModel m = new MapModel();
+
+            m.modelName = Path.GetFileNameWithoutExtension(mdl.Name);
+            //int validMeshes = 0;
+            m.numMeshes = 1;
+            m.modelPath = "./" + mdl.Name + ".avfx";
+            m.avfxFilePath = mdl.ModelFilePath;
+            return m;
+        }
+
         public static Quaternion ExtractRotationQuaternion(this Matrix m)
         {
             SharpDX.Quaternion dxRot = SharpDX.Quaternion.RotationMatrix(m);

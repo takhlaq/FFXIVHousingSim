@@ -380,7 +380,7 @@ public static class DataHandler
                 float r = entry.color.red / 255.0f;
 
                 light.color = new UnityEngine.Color(r, g, b, a);
-                light.intensity = intensity * 1.25f;
+                light.intensity = intensity;
 
                 // FollowsDirectionalLight
                 // SpecularEnabled
@@ -397,33 +397,36 @@ public static class DataHandler
         {
             foreach (MapVfxEntry entry in group.vfx)
             {
-                Mesh[] meshes = _modelMeshes[entry.modelId];
-                GameObject obj = AddMeshToNewGameObject(meshes, true);
+                foreach (var modelId in entry.modelIds)
+                {
+                    Mesh[] meshes = _modelMeshes[modelId];
+                    GameObject obj = AddMeshToNewGameObject(meshes, true);
 
-                obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath));
+                    obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath) + "_" + modelId);
 
-                obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
-                obj.GetComponent<Transform>().localPosition = entry.transform.translation;
-                obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
-                obj.GetComponent<Transform>().localScale = entry.transform.scale;
+                    obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+                    obj.GetComponent<Transform>().localPosition = entry.transform.translation;
+                    obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
+                    obj.GetComponent<Transform>().localScale = entry.transform.scale;
 
-                UnityEngine.Light light = obj.AddComponent<UnityEngine.Light>();
-                float x = entry.transform.scale.x;
+                    UnityEngine.Light light = obj.AddComponent<UnityEngine.Light>();
+                    float x = entry.transform.scale.x;
 
-                if (x != 1.0f && x != -1.0f)
-                    light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.transform.scale.y);
+                    if (x != 1.0f && x != -1.0f)
+                        light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.transform.scale.y);
 
-                //float intensity = entry.colorIntensity;
-                float a = entry.color.alpha / 255.0f;
-                float b = entry.color.blue / 255.0f;
-                float g = entry.color.green / 255.0f;
-                float r = entry.color.red / 255.0f;
+                    //float intensity = entry.colorIntensity;
+                    float a = entry.color.alpha / 255.0f;
+                    float b = entry.color.blue / 255.0f;
+                    float g = entry.color.green / 255.0f;
+                    float r = entry.color.red / 255.0f;
 
-                light.color = new UnityEngine.Color(r, g, b, a);
-                light.intensity = 1.25f;
-                light.type = UnityEngine.LightType.Point;
+                    light.color = new UnityEngine.Color(r, g, b, a);
+                    light.intensity = 1.25f;
+                    light.type = UnityEngine.LightType.Point;
 
-                obj.SetActive(true);
+                    obj.SetActive(true);
+                }
             }
         }
 

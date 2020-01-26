@@ -379,7 +379,7 @@ namespace FFXIVHSLib
     {
         public int id { get; set; }
         public int layerId { get; set; }
-        public int modelId { get; set; }
+        public List<int> modelIds { get; set; }
         public Transform transform { get; set; }
         public string avfxPath { get; set; }
         public string modelPath { get; set; }
@@ -399,6 +399,7 @@ namespace FFXIVHSLib
         {
             transform = new Transform();
             color = new MapColor();
+            modelIds = new List<int>();
         }
     }
 
@@ -455,6 +456,7 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public string modelPath { get; set; }
         public string modelName { get; set; }
+        public string avfxFilePath { get; set; }
         public int numMeshes { get; set; }
 
         public override bool Equals(object l)
