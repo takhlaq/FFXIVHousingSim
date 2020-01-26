@@ -380,7 +380,7 @@ public static class DataHandler
                 float r = entry.color.red / 255.0f;
 
                 light.color = new UnityEngine.Color(r, g, b, a);
-                light.intensity = intensity;
+                light.intensity = intensity * 1.25f;
 
                 // FollowsDirectionalLight
                 // SpecularEnabled
@@ -401,9 +401,9 @@ public static class DataHandler
                 {
                     Mesh[] meshes = _modelMeshes[modelId];
                     // uncomment to try load avfx meshes
-                    //GameObject obj = AddMeshToNewGameObject(meshes, true);
+                    GameObject obj = AddMeshToNewGameObject(meshes, true);
 
-                    GameObject obj = new GameObject();
+                    //GameObject obj = new GameObject();
 
                     obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath) + "_" + modelId);
 

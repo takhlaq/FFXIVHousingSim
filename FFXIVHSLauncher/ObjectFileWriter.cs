@@ -105,7 +105,7 @@ namespace FFXIVHSLauncher
                 }
 
                 vt.X = tv.UV.Value.X;
-                vt.Y = -1 * tv.UV.Value.Y;
+                vt.Y = -1.0f * tv.UV.Value.Y;
                 vt.W = (tv.UV.Value.W == 0) ? vt.X : tv.UV.Value.W;
                 vt.Z = (tv.UV.Value.Z == 0) ? vt.Y : tv.UV.Value.Z;
            
@@ -226,19 +226,26 @@ namespace FFXIVHSLauncher
                 imgName = imgName.Substring(imgLastSep + 1);
                 imgName = imgName.Replace(".atex", "_d.dds").Replace(".tex", ".dds");
 
-                //Write the image out
-                if (!File.Exists(mtlFolder + imgName))
+                try
                 {
-                    var ddsBytes = SaintCoinach.Imaging.ImageConverter.GetDDS(img);
-                    if (ddsBytes != null)
+                    //Write the image out
+                    if (!File.Exists(mtlFolder + imgName))
                     {
-                        System.IO.File.WriteAllBytes(mtlFolder + imgName, ddsBytes);
+                        var ddsBytes = SaintCoinach.Imaging.ImageConverter.GetDDS(img);
+                        if (ddsBytes != null)
+                        {
+                            System.IO.File.WriteAllBytes(mtlFolder + imgName, ddsBytes);
+                        }
+                        else
+                        {
+                            imgName = imgName.Replace(".dds", ".png");
+                            img.GetImage().Save(mtlFolder + imgName);
+                        }
                     }
-                    else
-                    {
-                        imgName = imgName.Replace(".dds", ".png");
-                        img.GetImage().Save(mtlFolder + imgName);
-                    }
+                }
+                catch (Exception e)
+                {
+                    continue;
                 }
                 String imgSuffix = imgName.Substring(imgName.Length - 6);
 
