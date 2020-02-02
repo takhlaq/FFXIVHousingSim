@@ -236,7 +236,7 @@ namespace FFXIVHSLauncher
             int validMeshes = 0;
 
             foreach (var mesh in a.Models)
-                if (mesh.AvfxVertexes.Length > 0)
+                if (mesh.Indices.Length > 0)
                     validMeshes++;
             m.numMeshes = validMeshes;
             m.modelPath = a.File.Path;

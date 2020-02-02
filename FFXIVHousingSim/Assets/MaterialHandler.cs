@@ -197,7 +197,15 @@ public class MaterialHandler
 //			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
 		//if (!_materialDictionary.ContainsKey(thisMaterial.name))
 			_materialDictionary.Add(thisMaterial.name, thisMaterial);
-		return true;
+        var mat2 = thisMaterial;
+        var matName = mat2.name;
+        //Debug.LogFormat("==========MATERIAL " + matName);
+        //if (matName.Contains("lig") || matName.Contains("lamp") || matName.Contains("lmp") || matName.Contains("aet"))  
+        //{
+        //    mat2.EnableKeyword("_EmissionPow");
+        //    mat2.SetFloat("_EmissionPow", 1.25f);
+        //}
+        return true;
 	}
 	
 	private Texture2D SetNormalMap2(Texture2D tex) {

@@ -666,7 +666,7 @@ namespace FFXIVHSLauncher
                         var mv = vfx.ToMapVfxEntry();
                         foreach (var mdl in vfx.AvfxFile.Models)
                         {
-                            if (mdl.AvfxVertexes.Length == 0)
+                            if (mdl.Indices.Length == 0)
                                 continue;
 
                             int modelId = map.TryAddUniqueModel(mdl.ToMapModel());
@@ -827,7 +827,7 @@ namespace FFXIVHSLauncher
                     var mv = vfx.ToMapVfxEntry();
                     foreach (var mdl in vfx.AvfxFile.Models)
                     {
-                        if (mdl.AvfxVertexes.Length == 0)
+                        if (mdl.Indices.Length == 0)
                             continue;
 
                         int modelId = map.TryAddUniqueModel(mdl.ToMapModel());

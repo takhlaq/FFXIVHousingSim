@@ -49,7 +49,7 @@ namespace FFXIVHSLauncher
 
                 var mesh = file.Models[i];
                 var mdlPath = "./" + mesh.Name + ".mtrl";
-                if (mesh.AvfxVertexes.Length == 0)
+                if (mesh.Indices.Length == 0)
                 {
                     ++invalidCount;
                     continue;

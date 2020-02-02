@@ -345,9 +345,9 @@ public static class DataHandler
 
                 UnityEngine.Light light = obj.AddComponent<UnityEngine.Light>();
                 float x = entry.transform.scale.x;
-                
+
                 if (x != 1.0f && x != -1.0f)
-                    light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.transform.scale.y);
+                    light.areaSize = new UnityEngine.Vector2(entry.transform.scale.x, entry.rangeRate);
 
                 // LightType
                 {
@@ -380,7 +380,11 @@ public static class DataHandler
                 float r = entry.color.red / 255.0f;
 
                 light.color = new UnityEngine.Color(r, g, b, a);
-                //light.intensity = intensity * 1.25f;
+                if (entry.color.alpha == 255 && entry.color.blue == 255 && entry.color.green == 255 && entry.color.red == 255)
+                    light.intensity = 0.0f;
+                else
+                    light.intensity = intensity * 1.25f;
+
 
                 // FollowsDirectionalLight
                 // SpecularEnabled
@@ -389,7 +393,7 @@ public static class DataHandler
                 // ShadowClipRange
                 light.shadowNearPlane = entry.shadowClipRange;
                 light.shadows = UnityEngine.LightShadows.Hard;
-                //light.range = 15.0f;
+                light.range = 15.0f;
 
                 obj.SetActive(true);
             }
@@ -427,10 +431,14 @@ public static class DataHandler
                     float r = entry.color.red / 255.0f;
 
                     light.color = new UnityEngine.Color(r, g, b, a);
-                    light.intensity = 1.25f;
+                    if (entry.color.alpha == 255 && entry.color.blue == 255 && entry.color.green == 255 && entry.color.red == 255)
+                        light.intensity = 0.0f;
+                    else
+                        light.intensity = 1.25f;
+
                     light.type = UnityEngine.LightType.Point;
                     light.shadows = UnityEngine.LightShadows.Hard;
-                    //light.range = 15.0f;
+                    light.range = 15.0f;
 
                     obj.SetActive(true);
                 }
