@@ -818,7 +818,10 @@ namespace FFXIVHSLauncher
             {
                 foreach (var mdl in sgbGroup.Entries.OfType<SgbModelEntry>())
                 {
-                    int modelId = map.TryAddUniqueModel(mdl.Model.Model.ToMapModel());
+                    var mMdl = mdl.Model.Model.ToMapModel();
+                    mMdl.isEmissive = mdl.IsEmissive;
+
+                    int modelId = map.TryAddUniqueModel(mMdl);
                     mg.AddEntry(mdl.Model.ToMapModelEntry(modelId));
                 }
 

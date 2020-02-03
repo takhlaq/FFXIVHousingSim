@@ -81,7 +81,8 @@ public class MaterialHandler
 		stream.Close();
 
 		Material thisMaterial = new Material(nonBlend);
-		
+        bool emissive = false;
+
 		using (StringReader str = new StringReader(mtlText))
 		{
 			String thisLine = str.ReadLine();
@@ -118,7 +119,7 @@ public class MaterialHandler
 									tex = Texture2D.blackTexture;
 							}
 							else
-								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out hasAlphaInDiffuse);
+								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
 							//tex.alphaIsTransparency = true;
 //							if (hasAlphaInDiffuse)
@@ -144,12 +145,12 @@ public class MaterialHandler
 									tex = Texture2D.blackTexture;
 							}
 							else
-								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()));
+								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
-							//tex.alphaIsTransparency = true;
-							//SetNormalMap(ref tex);
-							
-							if (tex != null && existingTexture == null)
+                            //tex.alphaIsTransparency = true;
+                            //SetNormalMap(ref tex);
+
+                            if (tex != null && existingTexture == null)
 								thisMaterial.SetTexture("_NormalMap0", tex);
 							else if (tex != null)
 								thisMaterial.SetTexture("_NormalMap1", tex);
@@ -169,8 +170,13 @@ public class MaterialHandler
 									tex = Texture2D.blackTexture;
 							}
 							else
-								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()));
-	
+								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
+
+                            if (emissive)
+                            {
+                                thisMaterial.EnableKeyword("_EmissionPow");
+                                thisMaterial.SetFloat("_EmissionPow", 1.25f);
+                            }
 							//tex.alphaIsTransparency = true;
 							if (tex != null && existingTexture == null)
 								thisMaterial.SetTexture("_Metallic0", tex);
@@ -197,14 +203,7 @@ public class MaterialHandler
 //			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
 		//if (!_materialDictionary.ContainsKey(thisMaterial.name))
 			_materialDictionary.Add(thisMaterial.name, thisMaterial);
-        var mat2 = thisMaterial;
-        var matName = mat2.name;
-        //Debug.LogFormat("==========MATERIAL " + matName);
-        //if (matName.Contains("lig") || matName.Contains("lamp") || matName.Contains("lmp") || matName.Contains("aet"))  
-        //{
-        //    mat2.EnableKeyword("_EmissionPow");
-        //    mat2.SetFloat("_EmissionPow", 1.25f);
-        //}
+
         return true;
 	}
 	
@@ -302,10 +301,10 @@ public class MaterialHandler
 		return texture;
 	}
 	
-	private Texture2D LoadTexture(String texPath, out Boolean hasAlpha)
+	private Texture2D LoadTexture(String texPath, out Boolean isEmissive)
 	{
 		Texture2D texture = null;
-		hasAlpha = false;
+		isEmissive = false;
      
 		if (!File.Exists(texPath))
 			return texture;
@@ -316,19 +315,22 @@ public class MaterialHandler
         {
             texture = LoadTextureDXT(File.ReadAllBytes(texPath));
             texture.alphaIsTransparency = true;
-            return texture;
         }
-
-        if (DebugLoadFiles && !texPath.Contains("dummy"))
+        else if (!texPath.Contains("dummy"))
 			texture.LoadImage(File.ReadAllBytes(texPath));
 
 		Color32[] alphaCheck = texture.GetPixels32();
 
-		foreach (Color32 c in alphaCheck)
-		{
-			if (c.a != 255)
-				hasAlpha = true;
-		}		
+        bool hasAlpha = false;
+        if (texPath.Contains("_s."))
+        {
+            foreach (Color32 c in alphaCheck)
+                if (c.r > 200 && c.b > 0 && c.a != 0xFF)
+                {
+                    isEmissive= true;
+                    break;
+                }
+        }
 		//texture.alphaIsTransparency = true;
      
 		return texture;

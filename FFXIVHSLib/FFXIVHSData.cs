@@ -459,6 +459,8 @@ namespace FFXIVHSLib
         public string avfxFilePath { get; set; }
         public int numMeshes { get; set; }
 
+        public bool isEmissive { get; set; }
+
         public override bool Equals(object l)
         {
             if (l is MapModel)

@@ -38,7 +38,13 @@ public static class DataHandler
     private static Map _map;
     
     //Extracted model handling
-    private static Dictionary<int, Mesh[]> _modelMeshes;
+
+    private struct CustomMesh
+    {
+        public Mesh mesh;
+        public bool emissive;
+    }
+    private static Dictionary<int, CustomMesh[]> _modelMeshes;
 	private static Dictionary<int, Mesh[][][]> _exteriorFixtureMeshes;
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
 
@@ -122,121 +128,6 @@ public static class DataHandler
         _blueprints = JsonConvert.DeserializeObject<HousingExteriorBlueprintSet>(jsonText);
     }
 
-	private static void LoadLandset()
-	{
-		if (!DebugLoadExteriors)
-			return;
-			
-		if (_exteriorFixtures == null)
-			LoadExteriorFixtures();
-		
-		if (_blueprints == null)
-			LoadExteriorBlueprints();
-
-		string landSetPath = FFXIVHSPaths.GetWardLandsetJson(territory);
-
-		if (!File.Exists(landSetPath))
-		{
-			//Main and subdivision, 60 plots
-			_landSet = new HousingExteriorStructure[60];
-			for (int i = 0; i < _landSet.Length; i++)
-			{
-				_landSet[i] = new HousingExteriorStructure();
-				int numFixtureTypes = Enum.GetValues(typeof(FixtureType)).Length;
-				_landSet[i].fixtures = new int[numFixtureTypes];
-			}
-				
-			string jsonText = JsonConvert.SerializeObject(_landSet, Formatting.Indented);
-			File.WriteAllText(landSetPath, jsonText);
-		}
-		else
-		{
-			string jsonText = File.ReadAllText(landSetPath);
-			_landSet = JsonConvert.DeserializeObject<HousingExteriorStructure[]>(jsonText);
-		}
-		
-		//TODO: move this, rewrite this ?
-		for (int plotIndex = 0; plotIndex < _landSet.Length; plotIndex++)
-		{
-			Plot plotAt = GetPlot(_territory, plotIndex % 30 + 1, plotIndex > 29);
-			if (_landSet[plotIndex].size == Size.s)
-			{
-				//Verify possibly unset size
-				_landSet[plotIndex].size = plotAt.size;
-			}
-
-			if (_landSet[plotIndex].fixtures[(int) FixtureType.fnc - 1] == 0)
-				_landSet[plotIndex].fixtures[(int) FixtureType.fnc - 1] = DefaultFences.fnc[(int) _territory];
-
-			HousingExteriorBlueprint blueprint = _blueprints.set[(int) _landSet[plotIndex].size];
-			
-			//TODO: If you ever figure out how to tell which transforms are for which house size, fix this
-			string groupName = "{0}_{1:D2}_{2}_house";
-			string fixedWardName = _territory.ToString().ToLower().Substring(0, _territory.ToString().Length - 1) + '0';
-			string strSize = _landSet[plotIndex].size.ToString();
-
-			groupName = string.Format(groupName, fixedWardName, plotIndex + 1, strSize);
-			Debug.Log(groupName);
-			GameObject parentPlotObject = GameObject.Find(groupName);
-			
-			//For each fixture in our landset element
-			for (int fixtureIndex = 0; fixtureIndex < _landSet[plotIndex].fixtures.Length; fixtureIndex++)
-			{
-				if (_landSet[plotIndex].fixtures[fixtureIndex] == 0)
-					continue;
-				
-				FixtureType fixtureType = (FixtureType) fixtureIndex + 1;
-
-				FFXIVHSLib.Transform[][] transformsForModels = null;
-				Mesh[][][] meshes = GetMeshesForExteriorFixture(_landSet[plotIndex].fixtures[fixtureIndex], ref transformsForModels);
-
-				//For each variant
-				for (int variantIndex = 0; variantIndex < meshes.Length; variantIndex++)
-				{
-					if (blueprint.fixtureTransforms[fixtureType][variantIndex] == null ||
-					    meshes[variantIndex] == null)
-						continue;
-					
-					//The set of gameobjects for this variant, 1 gameobject per model
-					GameObject[] objects = new GameObject[meshes[variantIndex].Length];
-					
-					for (int modelIndex = 0; modelIndex < objects.Length; modelIndex++)
-					{
-						objects[modelIndex] = AddMeshToNewGameObject(meshes[variantIndex][modelIndex]);
-					}
-					
-					foreach (FFXIVHSLib.Transform t in blueprint.fixtureTransforms[fixtureType][variantIndex])
-					{
-						GameObject variantBaseObject = new GameObject();
-						variantBaseObject.GetComponent<Transform>().SetParent(parentPlotObject.transform);
-						variantBaseObject.GetComponent<Transform>().localPosition = t.translation;
-						variantBaseObject.GetComponent<Transform>().localRotation = t.rotation;
-						variantBaseObject.GetComponent<Transform>().localScale = t.scale;
-						variantBaseObject.name = string.Format("bp{0}_ft{1}_v{2}", _landSet[plotIndex].size, fixtureType, variantIndex);
-						
-						for (int modelIndex = 0; modelIndex < objects.Length; modelIndex++)
-						{
-							if (objects[modelIndex] == null)
-								continue;
-							
-							FFXIVHSLib.Transform modelTransform = transformsForModels[variantIndex][modelIndex];
-
-							GameObject addedModel = UnityEngine.Object.Instantiate(objects[modelIndex]);
-							addedModel.GetComponent<Transform>().SetParent(variantBaseObject.GetComponent<Transform>());
-							addedModel.GetComponent<Transform>().localPosition = modelTransform.translation;
-							addedModel.GetComponent<Transform>().localRotation = modelTransform.rotation;
-							addedModel.GetComponent<Transform>().localScale = modelTransform.scale;
-							addedModel.name = addedModel.name.Replace("(Clone)", "_") + string.Format("{0}_{1}_{2}", fixtureIndex, variantIndex, modelIndex);
-							addedModel.SetActive(true);
-							
-							UnityEngine.Object.Destroy(objects[modelIndex]);
-						}
-					}
-				}
-			}
-		}
-	}
-
     private static void LoadMapTerrainInfo()
     {
         UnityEngine.Debug.Log(teriStr);//
@@ -250,7 +141,7 @@ public static class DataHandler
     {
         LoadMapTerrainInfo();
 
-        _modelMeshes = new Dictionary<int, Mesh[]>();
+        _modelMeshes = new Dictionary<int, CustomMesh[]>();
 
 	    string objectsFolder = FFXIVHSPaths.GetTerritoryObjectsDirectory(_teriStr);
         
@@ -260,12 +151,13 @@ public static class DataHandler
 		        if (!debugCustomLoadList.Contains(model.id))
 			        continue;
 	        
-            Mesh[] modelMeshes = new Mesh[model.numMeshes];
+            CustomMesh[] modelMeshes = new CustomMesh[model.numMeshes];
 
             for (int i = 0; i < model.numMeshes; i++)
             {
                 string meshFileName = string.Format("{0}{1}_{2}.obj", objectsFolder, model.modelName, i);
-	            modelMeshes[i] = FastObjImporter.Instance.ImportFile(meshFileName);
+	            modelMeshes[i].mesh = FastObjImporter.Instance.ImportFile(meshFileName);
+                modelMeshes[i].emissive = model.isEmissive;
             }
             _modelMeshes.Add(model.id, modelMeshes);
         }
@@ -321,7 +213,7 @@ public static class DataHandler
 					if (!debugCustomLoadList.Contains(entry.modelId))
 						continue;
 				
-				Mesh[] meshes = _modelMeshes[entry.modelId];
+				CustomMesh[] meshes = _modelMeshes[entry.modelId];
 				GameObject obj = AddMeshToNewGameObject(meshes, true);
 
 				obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
@@ -405,7 +297,7 @@ public static class DataHandler
             {
                 foreach (var modelId in entry.modelIds)
                 {
-                    Mesh[] meshes = _modelMeshes[modelId];
+                    CustomMesh[] meshes = _modelMeshes[modelId];
                     // uncomment to try load avfx meshes
                     GameObject obj = AddMeshToNewGameObject(meshes, false);
 
@@ -515,8 +407,11 @@ public static class DataHandler
 		}
 	}
 	
-	private static GameObject AddMeshToNewGameObject(Mesh[] meshes, bool addMeshCollider = false, string name = null)
+	private static GameObject AddMeshToNewGameObject(CustomMesh[] cmeshes, bool addMeshCollider = false, string name = null)
 	{
+        Mesh[] meshes = new Mesh[cmeshes.Length];
+        for (int i = 0; i < meshes.Length; ++i)
+            meshes[i] = cmeshes[i].mesh;
 		//Set up our gameobject and add a renderer and filter
 		GameObject obj = new GameObject();
 		obj.AddComponent<MeshRenderer>();
@@ -525,11 +420,12 @@ public static class DataHandler
 		Renderer objRenderer = obj.GetComponent<Renderer>();
 		Material[] mats = new Material[meshes.Length];
 		MaterialHandler mtlHandler = MaterialHandler.GetInstance();
-	
+
 		for (int i = 0; i < meshes.Length; i++)
 		{
 			Material mat = mtlHandler.GetMaterialForMesh(meshes[i].name);
-				
+            bool emissive = false;//cmeshes[i].emissive;
+
 			if (mat == null)
 			{
 				Debug.LogFormat("Could not find material for mesh {0}", meshes[i].name);
@@ -537,7 +433,13 @@ public static class DataHandler
 			}
 			else
 				mats[i] = mat;
-		}
+
+            if (emissive)
+            {
+                mats[i].EnableKeyword("_EmissionPow");
+                mats[i].SetFloat("_EmissionPow", 1.25f);
+            }
+        }
 		objRenderer.materials = mats;
 			
 		Mesh main = new Mesh();
