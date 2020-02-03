@@ -51,6 +51,8 @@ public static class DataHandler
     private static Territory _territory = (Territory) 999;
     private static string _teriStr;
 
+    public static GameObject rootGameObj;
+
     public static string teriStr
     {
         get { return _teriStr; }
@@ -158,6 +160,8 @@ public static class DataHandler
                 string meshFileName = string.Format("{0}{1}_{2}.obj", objectsFolder, model.modelName, i);
 	            modelMeshes[i].mesh = FastObjImporter.Instance.ImportFile(meshFileName);
                 modelMeshes[i].emissive = model.isEmissive;
+
+                //AssetDatabase.CreateAsset(modelMeshes[i].mesh, meshFileName + ".asset");
             }
             _modelMeshes.Add(model.id, modelMeshes);
         }
@@ -166,6 +170,9 @@ public static class DataHandler
     
     private static void LoadTerritory()
     {
+        rootGameObj = new GameObject();
+        rootGameObj.name = teriStr;
+
 	    if (DebugLoadMap)
 	    {
 		    LoadMapMeshes();
@@ -191,6 +198,7 @@ public static class DataHandler
 
 		if (parent == null)
 		{
+            groupRootObject.GetComponent<Transform>().SetParent(rootGameObj.GetComponent<Transform>());
 			groupRootObject.GetComponent<Transform>().position = Vector3.Reflect(group.groupTransform.translation, Vector3.left);
 			groupRootObject.GetComponent<Transform>().rotation = Quaternion.Euler(Vector3.Reflect(group.groupTransform.rotation.ToVector3(), Vector3.left));
 			groupRootObject.GetComponent<Transform>().localScale = Vector3.Reflect(group.groupTransform.scale, Vector3.left);
@@ -345,6 +353,7 @@ public static class DataHandler
 					LoadMapGroup(subGroup, groupRootObject);
 			}	
 		}
+        //AssetDatabase.CreateAsset(groupRootObject)
 	}
 
 	private static void AddMeshToGameObject(Mesh[] meshes, GameObject obj)
@@ -490,6 +499,7 @@ public static class DataHandler
 
 		obj.name = newName;
 		obj.SetActive(false);
+
 		return obj;
 	}
 	

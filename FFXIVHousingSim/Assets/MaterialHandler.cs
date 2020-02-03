@@ -116,14 +116,13 @@ public class MaterialHandler
 								if (existingTexture != null)
 									tex = existingTexture as Texture2D;
 								else
-									tex = Texture2D.blackTexture;
+									tex = Texture2D.whiteTexture;
 							}
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
-							//tex.alphaIsTransparency = true;
-//							if (hasAlphaInDiffuse)
-//								thisMaterial.shader = cutout;
+							if (tex.alphaIsTransparency)
+								thisMaterial.shader = cutout;
 								
 							if (tex != null && existingTexture == null)
 								thisMaterial.SetTexture("_Albedo0", tex);
@@ -142,8 +141,8 @@ public class MaterialHandler
 								if (existingTexture != null)
 									tex = existingTexture as Texture2D;
 								else
-									tex = Texture2D.blackTexture;
-							}
+									tex = Texture2D.normalTexture;
+                            }
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
@@ -175,7 +174,7 @@ public class MaterialHandler
                             if (emissive)
                             {
                                 thisMaterial.EnableKeyword("_EmissionPow");
-                                thisMaterial.SetFloat("_EmissionPow", 1.25f);
+                                thisMaterial.SetFloat("_EmissionPow", 2.25f);
                             }
 							//tex.alphaIsTransparency = true;
 							if (tex != null && existingTexture == null)
@@ -203,7 +202,7 @@ public class MaterialHandler
 //			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
 		//if (!_materialDictionary.ContainsKey(thisMaterial.name))
 			_materialDictionary.Add(thisMaterial.name, thisMaterial);
-
+        //AssetDatabase.CreateAsset(thisMaterial, thisMaterial.name + ".asset");
         return true;
 	}
 	
@@ -325,13 +324,26 @@ public class MaterialHandler
         if (texPath.Contains("_s."))
         {
             foreach (Color32 c in alphaCheck)
-                if (c.r > 200 && c.b > 0 && c.a != 0xFF)
+            {
+                if (c.a != 0xFF)
                 {
-                    isEmissive= true;
+                    hasAlpha = true;
                     break;
                 }
+            }
+            //if (hasAlpha)
+            {
+                foreach (Color32 c in alphaCheck)
+                {
+                    if ((c.r == 255 && c.g == 95 && c.b == 65) || (c.r > 100 && c.a != 0xFF))
+                    {
+                        isEmissive = true;
+                        break;
+                    }
+                }
+            }
         }
-		//texture.alphaIsTransparency = true;
+		texture.alphaIsTransparency = hasAlpha;
      
 		return texture;
 	}
