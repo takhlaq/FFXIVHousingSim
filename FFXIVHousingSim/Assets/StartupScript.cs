@@ -38,7 +38,7 @@ public class FFXIVHSDialog : EditorWindow
             DebugTimer timer = new DebugTimer();
             timer.registerEvent("Begin");
 
-            DataHandler.teriStr = "r2t1";
+            DataHandler.teriStr = teriStr;
             timer.registerEvent("TerritoryLoad");
 
             Debug.Log("Startupscript finished.");
