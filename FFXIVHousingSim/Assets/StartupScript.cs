@@ -15,6 +15,8 @@ public class FFXIVHSDialog : EditorWindow
 {
     public float saveTime = 300;
     public float nextSave = 0;
+    public string teriStr = "r2t1";
+    
     [MenuItem("FFXIVHS/Load HS Export")]
     static void Init()
     {
@@ -27,9 +29,8 @@ public class FFXIVHSDialog : EditorWindow
         EditorGUILayout.LabelField("Import HS Export or Save current scene as unity prefab.", EditorStyles.wordWrappedLabel);
         GUILayout.Space(10);
 
-        string teriStr = "r2t1";
         teriStr = EditorGUILayout.TextField("Teri: ", teriStr);
-
+        this.Repaint();
         EditorGUILayout.BeginHorizontal();
         if (GUILayout.Button("Import"))
         {
@@ -42,6 +43,7 @@ public class FFXIVHSDialog : EditorWindow
             timer.registerEvent("TerritoryLoad");
 
             Debug.Log("Startupscript finished.");
+            Close();
         }
         else if (GUILayout.Button("Save prefab"))
         {
@@ -49,7 +51,9 @@ public class FFXIVHSDialog : EditorWindow
             path[path.Length - 1] = "Assets/Scenes/" + teriStr + ".unity";
             bool saveOK = EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene(), string.Join("/", path));
             Debug.Log("Saved Scene " + (saveOK ? "OK" : "Error!"));
+            Close();
         }
+        EditorGUILayout.EndHorizontal();
     }
 }
 
