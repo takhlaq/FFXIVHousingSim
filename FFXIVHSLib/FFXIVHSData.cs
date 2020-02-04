@@ -214,6 +214,9 @@ namespace FFXIVHSLib
 
         public Dictionary<int, MapVfxEntry> vfx { get; set; }
 
+        public Dictionary<int, MapSoundEntry> sounds { get; set; }
+
+
         public void AddMapGroup(MapGroup group)
         {
             if (groups == null)
@@ -283,6 +286,24 @@ namespace FFXIVHSLib
 
             return id;
         }
+
+        public int TryAddUniqueSound(MapSoundEntry se)
+        {
+            if (this.sounds == null)
+                this.sounds  = new Dictionary<int, MapSoundEntry>();
+
+            //Attempt to get vfx
+            var res = sounds.Where(_ => _.Value.Equals(se)).Select(_ => _);
+
+            if (res.Count() == 1)
+                return res.Single().Key;
+
+            int id = this.sounds.Count;
+            se.id = id;
+            this.sounds.Add(id, se);
+
+            return id;
+        }
     }
 
     public class MapGroup
@@ -301,6 +322,7 @@ namespace FFXIVHSLib
         public List<MapModelEntry> entries;
         public List<MapLightEntry> lights;
         public List<MapVfxEntry> vfx;
+        public List<MapSoundEntry> sounds;
 
         public MapGroup()
         {
@@ -343,6 +365,13 @@ namespace FFXIVHSLib
                 vfx = new List<MapVfxEntry>();
 
             vfx.Add(mve);
+        }
+
+        public void AddEntry(MapSoundEntry mse)
+        {
+            if (sounds == null)
+                sounds = new List<MapSoundEntry>();
+            sounds.Add(mse);
         }
     }
 
@@ -443,6 +472,25 @@ namespace FFXIVHSLib
             {
                 MapLightEntry m = (MapLightEntry)l;
                 return transform == m.transform && lightType == m.lightType && color == m.color && colorIntensity == m.colorIntensity;
+            }
+            return false;
+        }
+    }
+
+    public class MapSoundEntry
+    {
+        public int id { get; set; }
+        public string filePath { get; set; }
+        public string fileName { get; set; }
+
+        public Transform transform { get; set; }
+
+        public override bool Equals(object l)
+        {
+            if (l is MapSoundEntry)
+            {
+                MapSoundEntry m = (MapSoundEntry)l;
+                return m.filePath == filePath && m.transform == transform;
             }
             return false;
         }

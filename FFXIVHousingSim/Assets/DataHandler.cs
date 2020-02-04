@@ -345,6 +345,22 @@ public static class DataHandler
             }
         }
 
+        if (group.sounds != null && group.sounds.Count > 0)
+        {
+            foreach (MapSoundEntry entry in group.sounds)
+            {
+                GameObject obj = new GameObject();
+                obj.name = "SOUND_" + entry.fileName;
+
+                obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+                obj.GetComponent<Transform>().localPosition = entry.transform.translation;
+                obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
+                obj.GetComponent<Transform>().localScale = entry.transform.scale;
+
+                obj.SetActive(true);
+            }
+        }
+
 		if (group.groups != null && group.groups.Count > 0)
 		{
 			foreach (MapGroup subGroup in group.groups)

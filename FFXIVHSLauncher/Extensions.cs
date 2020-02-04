@@ -256,6 +256,60 @@ namespace FFXIVHSLauncher
             return m;
         }
 
+        public static MapSoundEntry ToMapSoundEntry(this SaintCoinach.Graphics.Lgb.LgbSoundEntry se)
+        {
+            MapSoundEntry mse = new MapSoundEntry();
+            var h = se.Header;
+
+            mse.fileName = se.Name;
+            if (string.IsNullOrEmpty(mse.fileName))
+                mse.fileName = Path.GetFileName(se.ShcdFilePath);
+
+            mse.filePath = se.ShcdFilePath;
+
+            Transform entryTransform = new Transform();
+            entryTransform.translation = new Vector3(h.Translation.X, h.Translation.Y, h.Translation.Z);
+
+            Matrix rotationMatrix = Matrix.Identity *
+                                    Matrix.RotationX(h.Rotation.X) *
+                                    Matrix.RotationY(h.Rotation.Y) *
+                                    Matrix.RotationZ(h.Rotation.Z);
+            Quaternion rotationQuaternion = ExtractRotationQuaternion(rotationMatrix);
+            entryTransform.rotation = rotationQuaternion;
+            entryTransform.scale = new Vector3(h.Scale.X, h.Scale.Y, h.Scale.Z);
+
+            mse.transform = entryTransform;
+
+            return mse;
+        }
+
+        public static MapSoundEntry ToMapSoundEntry(this SaintCoinach.Graphics.Sgb.SgbSoundEntry se)
+        {
+            MapSoundEntry mse = new MapSoundEntry();
+            var h = se.Header;
+
+            mse.fileName = se.Name;
+            if (string.IsNullOrEmpty(mse.fileName))
+                mse.fileName = Path.GetFileName(se.ShcdFilePath);
+
+            mse.filePath = se.ShcdFilePath;
+
+            Transform entryTransform = new Transform();
+            entryTransform.translation = new Vector3(h.Translation.X, h.Translation.Y, h.Translation.Z);
+
+            Matrix rotationMatrix = Matrix.Identity *
+                                    Matrix.RotationX(h.Rotation.X) *
+                                    Matrix.RotationY(h.Rotation.Y) *
+                                    Matrix.RotationZ(h.Rotation.Z);
+            Quaternion rotationQuaternion = ExtractRotationQuaternion(rotationMatrix);
+            entryTransform.rotation = rotationQuaternion;
+            entryTransform.scale = new Vector3(h.Scale.X, h.Scale.Y, h.Scale.Z);
+
+            mse.transform = entryTransform;
+
+            return mse;
+        }
+
         public static Quaternion ExtractRotationQuaternion(this Matrix m)
         {
             SharpDX.Quaternion dxRot = SharpDX.Quaternion.RotationMatrix(m);

@@ -683,6 +683,13 @@ namespace FFXIVHSLauncher
                         lgbMapGroup.AddEntry(ml);
                     }
 
+                    foreach (var se in lgbGroup.Entries.OfType<LgbSoundEntry>())
+                    {
+                        var ms = se.ToMapSoundEntry();
+                        int sId = map.TryAddUniqueSound(ms);
+                        lgbMapGroup.AddEntry(ms);
+                    }
+
                     foreach (var gim in lgbGroup.Entries.OfType<LgbGimmickEntry>())
                     {
                         MapGroup gimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(gim.Name, gim.Gimmick.File.Path));
@@ -845,6 +852,13 @@ namespace FFXIVHSLauncher
                     var ml = light.ToMapLightEntry();
                     int lightId = map.TryAddUniqueLight(ml);
                     mg.AddEntry(ml);
+                }
+
+                foreach (var se in sgbGroup.Entries.OfType<SgbSoundEntry>())
+                {
+                    var ms = se.ToMapSoundEntry();
+                    int sId = map.TryAddUniqueSound(ms);
+                    mg.AddEntry(ms);
                 }
             }
         }
