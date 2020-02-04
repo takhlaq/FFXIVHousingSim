@@ -141,10 +141,16 @@ public class MaterialHandler
 								if (existingTexture != null)
 									tex = existingTexture as Texture2D;
 								else
-									tex = Texture2D.normalTexture;
+									tex = null;
                             }
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
+
+                            if (tex != null && tex.alphaIsTransparency)
+                            {
+                                thisMaterial.EnableKeyword("_EmissionPow");
+                                thisMaterial.SetFloat("_EmissionPow", 2.25f);
+                            }
 
                             //tex.alphaIsTransparency = true;
                             //SetNormalMap(ref tex);

@@ -92,8 +92,6 @@ public static class DataHandler
 	        Debug.LogFormat("Territory changed to {0}", value.ToString());
 	        
 	        //TODO: When events implemented make this an event
-	        CameraHandler[] c = Resources.FindObjectsOfTypeAll<CameraHandler>();
-	        c[0]._territory = value;
 			
 			GameObject[] currentGameObjects = Resources.FindObjectsOfTypeAll<GameObject>();
 	
@@ -258,7 +256,11 @@ public static class DataHandler
                     else if (entry.lightType == "Directional")
                         light.type = UnityEngine.LightType.Directional;
                     else if (entry.lightType == "Line" || entry.lightType == "Plane")
+#if UNITY_2017_1_OR_NEWER
                         light.type = UnityEngine.LightType.Rectangle;
+#else
+                        light.type = UnityEngine.LightType.Area;
+#endif
                     else
                         light.type = UnityEngine.LightType.Point;
 
