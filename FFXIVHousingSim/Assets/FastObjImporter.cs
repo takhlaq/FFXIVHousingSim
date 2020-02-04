@@ -277,7 +277,7 @@ public sealed class FastObjImporter
         int len = value.Length;
         int decimalIndex = value.Length;
         for (int i = len - 1; i >= 0; i--)
-            if (value[i] == '.')
+            if (value[i] == '.'|| value[i] == ',')
             { decimalIndex = i; break; }
         int offset = -MIN_POW_10 + decimalIndex;
         for (int i = 0; i < decimalIndex; i++)
