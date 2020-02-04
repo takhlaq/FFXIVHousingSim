@@ -46,6 +46,9 @@ namespace FFXIVHSLauncher
 
             // brexit
             System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+            Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.DefaultThreadCurrentCulture;
+            Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.DefaultThreadCurrentCulture;
+
 
             if (!realm.IsCurrentVersion)
             {
