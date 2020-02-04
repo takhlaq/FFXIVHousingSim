@@ -44,6 +44,9 @@ namespace FFXIVHSLauncher
             
             realm = new ARealmReversed(FFXIVHSPaths.GetGameDirectory(), SaintCoinach.Ex.Language.English);
 
+            // brexit
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.CreateSpecificCulture("en-GB");
+
             if (!realm.IsCurrentVersion)
             {
                 /*
