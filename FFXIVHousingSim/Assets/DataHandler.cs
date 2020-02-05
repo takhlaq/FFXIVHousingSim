@@ -256,7 +256,7 @@ public static class DataHandler
                     else if (entry.lightType == "Directional")
                         light.type = UnityEngine.LightType.Directional;
                     else if (entry.lightType == "Line" || entry.lightType == "Plane")
-#if UNITY_2017_1_OR_NEWER
+#if UNITY_2018_1_OR_NEWER
                         light.type = UnityEngine.LightType.Rectangle;
 #else
                         light.type = UnityEngine.LightType.Area;
