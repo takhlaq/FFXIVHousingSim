@@ -149,10 +149,6 @@ public static class DataHandler
         
         foreach (MapModel model in _map.models.Values)
         {
-	        if (DebugCustomLoad)
-		        if (!debugCustomLoadList.Contains(model.id))
-			        continue;
-	        
             CustomMesh[] modelMeshes = new CustomMesh[model.numMeshes];
 
             for (int i = 0; i < model.numMeshes; i++)
@@ -184,7 +180,6 @@ public static class DataHandler
                 var fname = "./Assets/" + animScript.scriptFileName;
                 File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
                 UnityEditor.AssetDatabase.ImportAsset(fname);
-                UnityEditor.AssetDatabase.Refresh();
                 MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
 
                 if (!_mapScriptObjs.ContainsKey(animScript.id))
@@ -192,6 +187,8 @@ public static class DataHandler
             }
         }
         //UnityEditor.AssetDatabase.Build();
+        UnityEditor.AssetDatabase.Refresh();
+
     }
 
     private static void LoadTerritory()
@@ -249,17 +246,16 @@ public static class DataHandler
 		{
 			foreach (MapModelEntry entry in group.entries)
 			{
-				if (DebugCustomLoad)
-					if (!debugCustomLoadList.Contains(entry.modelId))
-						continue;
-				
 				CustomMesh[] meshes = _modelMeshes[entry.modelId];
 				GameObject obj = AddMeshToNewGameObject(meshes, true);
 
                 // anim scripts
                 foreach (var mapScriptId in entry.animScriptIds)
-                    obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
-
+                {
+                    var comp = Type.GetType(_mapScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapScriptNames[mapScriptId] + "\n");
+                }
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
 				obj.GetComponent<Transform>().localPosition = entry.transform.translation;
 				obj.GetComponent<Transform>().localRotation = entry.transform.rotation;

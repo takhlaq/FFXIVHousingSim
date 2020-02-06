@@ -215,8 +215,8 @@ public sealed class FastObjImporter
         }
         
         MaterialHandler mtlHandler = MaterialHandler.GetInstance();
-        Debug.LogFormat(fileName);
-        Debug.LogFormat(mtlFile.ToString());
+        //Debug.LogFormat(fileName);
+        //Debug.LogFormat(mtlFile.ToString());
 
         //try
         {

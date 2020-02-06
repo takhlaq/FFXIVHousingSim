@@ -696,7 +696,7 @@ namespace FFXIVHSLauncher
                         gimMapGroup.groupTransform = TransformFromGimmickHeader(gim.Header);
 
                         AddSgbModelsToMap(ref map, ref gimMapGroup, gim.Gimmick);
-                        //AddRotationAnimToMapGroup(ref map, gim.Gimmick, ref gimMapGroup, gim.Header.GimmickId);
+                        AddRotationAnimToMapGroup(ref map, gim.Gimmick, ref gimMapGroup, gim.Header.GimmickId);
 
                         foreach (var rootGimGroup in gim.Gimmick.Data.OfType<SgbGroup>())
                         {
@@ -739,7 +739,7 @@ namespace FFXIVHSLauncher
                         gimMapGroup.groupTransform = TransformFromGimmickHeader(eobj.Header);
 
                         AddSgbModelsToMap(ref map, ref gimMapGroup, eobj.Gimmick);
-                        //AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref gimMapGroup, eobj.Header.GimmickId);
+                        AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref gimMapGroup, eobj.Header.GimmickId);
 
                         foreach (var rootGimGroup in eobj.Gimmick.Data.OfType<SgbGroup>())
                         {
