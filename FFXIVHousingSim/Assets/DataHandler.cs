@@ -36,7 +36,7 @@ public static class DataHandler
     private static Dictionary<int, HousingExteriorFixture> _exteriorFixtures;
     private static HousingExteriorBlueprintSet _blueprints;
     private static Map _map;
-    
+
     //Extracted model handling
 
     private struct CustomMesh
@@ -47,6 +47,8 @@ public static class DataHandler
     private static Dictionary<int, CustomMesh[]> _modelMeshes;
 	private static Dictionary<int, Mesh[][][]> _exteriorFixtureMeshes;
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
+    private static Dictionary<int, string> _mapScriptNames;
+    private static Dictionary<int, MonoBehaviour> _mapScriptObjs;
 
     private static Territory _territory = (Territory) 999;
     private static string _teriStr;
@@ -171,11 +173,29 @@ public static class DataHandler
         rootGameObj = new GameObject();
         rootGameObj.name = teriStr;
 
+
 	    if (DebugLoadMap)
 	    {
-		    LoadMapMeshes();
-		
-		    foreach (MapGroup group in _map.groups.Values)
+            _mapScriptNames = new Dictionary<int, string>();
+            _mapScriptObjs = new Dictionary<int, MonoBehaviour>();
+            LoadMapMeshes();
+            {
+                var scriptFolder = Path.Combine(Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriStr + "\\"),"scripts\\");
+                foreach (MapAnimScriptEntry animScript in _map.animScripts.Values)
+                {
+                    if (!_mapScriptNames.ContainsKey(animScript.id))
+                        _mapScriptNames.Add(animScript.id, animScript.name);
+
+                    var fname = "./Assets/" + animScript.scriptFileName;
+                    File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
+                    MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
+
+                    if (!_mapScriptObjs.ContainsKey(animScript.id))
+                        _mapScriptObjs.Add(animScript.id, scriptObj);
+                }
+            }
+
+            foreach (MapGroup group in _map.groups.Values)
 			    LoadMapGroup(group);
 	    }
         //LoadLights();
@@ -194,7 +214,12 @@ public static class DataHandler
 		
 		GameObject groupRootObject = new GameObject(group.groupName);
 
-		if (parent == null)
+        // anim scripts
+        if (group.animScriptRefs != null)
+            foreach (var mapScriptId in group.animScriptRefs)
+                groupRootObject.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+
+        if (parent == null)
 		{
             groupRootObject.GetComponent<Transform>().SetParent(rootGameObj.GetComponent<Transform>());
 			groupRootObject.GetComponent<Transform>().position = Vector3.Reflect(group.groupTransform.translation, Vector3.left);
@@ -222,7 +247,11 @@ public static class DataHandler
 				CustomMesh[] meshes = _modelMeshes[entry.modelId];
 				GameObject obj = AddMeshToNewGameObject(meshes, true);
 
-				obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
+                // anim scripts
+                foreach (var mapScriptId in entry.animScriptIds)
+                    obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+
+                obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
 				obj.GetComponent<Transform>().localPosition = entry.transform.translation;
 				obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
 				obj.GetComponent<Transform>().localScale = entry.transform.scale;
@@ -311,6 +340,10 @@ public static class DataHandler
                     // uncomment to try load avfx meshes
                     GameObject obj = AddMeshToNewGameObject(meshes, false);
 
+                    // anim scripts
+                    foreach (var mapScriptId in entry.animScriptIds)
+                        obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+
                     //GameObject obj = new GameObject();
 
                     obj.name = ("VFX_" + entry.id + "_" + entry.layerId + "_" + System.IO.Path.GetFileNameWithoutExtension(entry.avfxPath) + "_" + modelId);
@@ -354,6 +387,10 @@ public static class DataHandler
                 GameObject obj = new GameObject();
                 obj.name = "SOUND_" + entry.fileName;
 
+                // anim scripts
+                foreach (var mapScriptId in entry.animScriptIds)
+                    obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
                 obj.GetComponent<Transform>().localPosition = entry.transform.translation;
                 obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
@@ -374,7 +411,30 @@ public static class DataHandler
         //AssetDatabase.CreateAsset(groupRootObject)
 	}
 
-	private static void AddMeshToGameObject(Mesh[] meshes, GameObject obj)
+    private static void WriteScriptFile(String path, FFXIVHSLib.MapAnimScriptEntry entry)
+    {
+        // todo: delay memes too
+        string outStr = "using System.Collections;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n";
+        outStr += "public class " + entry.name + " : MonoBehaviour {\n";
+        outStr += "\n\n";
+        outStr += "\tfloat delayTime = " + entry.delay + "f;\n";
+        outStr += "\tvoid Start(){}\n\n";
+        outStr += "\tvoid Update() {\n\t";
+        outStr += "\ttransform.Rotate";
+        if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.X)
+            outStr += $"(Time.deltaTime * {entry.fullRotationTime / 10.0f}f, 0.0f, 0.0f);";
+        else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Y)
+            outStr += $"(0.0f, Time.deltaTime * {entry.fullRotationTime / 10.0f}f, 0.0f);";
+        else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Z)
+            outStr += $"(0.0f, 0.0f, Time.deltaTime * {entry.fullRotationTime / 10.0f});";
+
+        outStr += "\n\t}";
+        outStr += "\n}\n";
+
+        File.WriteAllText(path, outStr);
+    }
+
+    private static void AddMeshToGameObject(Mesh[] meshes, GameObject obj)
 	{
 		Renderer objRenderer = obj.GetComponent<Renderer>();
 		Material[] mats = new Material[meshes.Length];

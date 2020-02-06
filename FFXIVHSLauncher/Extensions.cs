@@ -310,6 +310,26 @@ namespace FFXIVHSLauncher
             return mse;
         }
 
+        public static MapAnimScriptEntry ToMapAnimScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimRotation s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        {
+            MapAnimScriptEntry mse = new MapAnimScriptEntry();
+
+            mse.animIndex = animIndex;
+            mse.parentSgbPath = parent.File.Path;
+            mse.targetSgbEntryIndex = s.TargetSGEntryID;
+            mse.axis = (MapAnimRotationAxis)s.Axis;
+            mse.fullRotationTime = s.FullRotationTime;
+            mse.delay = s.UnknownFloat;
+            mse.targetSgbVfxId = s.TargetSGVfx;
+            mse.targetSgbVfxId = s.TargetSGVfx2;
+            mse.targetSgbSoundStartId = s.SomeSoundLink;
+            mse.targetSgbSoundMidId = s.SomeSoundLink2;
+            mse.targetSgbSoundEndId = s.SomeSoundLink3;
+            mse.name = "ROT_" + Path.GetFileNameWithoutExtension(mse.parentSgbPath) + "_" + mse.animIndex;
+            mse.scriptFileName = mse.name + ".cs";
+            return mse;
+        }
+
         public static Quaternion ExtractRotationQuaternion(this Matrix m)
         {
             SharpDX.Quaternion dxRot = SharpDX.Quaternion.RotationMatrix(m);

@@ -216,6 +216,12 @@ namespace FFXIVHSLib
 
         public Dictionary<int, MapSoundEntry> sounds { get; set; }
 
+        public Dictionary<int, MapAnimScriptEntry> animScripts { get; set; }
+
+        public Map()
+        {
+            this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
+        }
 
         public void AddMapGroup(MapGroup group)
         {
@@ -304,6 +310,22 @@ namespace FFXIVHSLib
 
             return id;
         }
+
+        public int TryAddUniqueAnimScript(MapAnimScriptEntry se)
+        {
+            if (this.animScripts == null)
+                this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
+
+            var res = animScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
+
+            if (res.Count() == 1)
+                return res.Single().Key;
+
+            int id = this.animScripts.Count;
+            se.id = id;
+            this.animScripts.Add(id, se);
+            return id;
+        }
     }
 
     public class MapGroup
@@ -323,6 +345,7 @@ namespace FFXIVHSLib
         public List<MapLightEntry> lights;
         public List<MapVfxEntry> vfx;
         public List<MapSoundEntry> sounds;
+        public List<int> animScriptRefs;
 
         public MapGroup()
         {
@@ -373,6 +396,13 @@ namespace FFXIVHSLib
                 sounds = new List<MapSoundEntry>();
             sounds.Add(mse);
         }
+
+        public void AddEntry(MapAnimScriptEntry mse)
+        {
+            if (animScriptRefs == null)
+                animScriptRefs = new List<int>();
+            animScriptRefs.Add(mse.id);
+        }
     }
 
     /// <summary>
@@ -383,7 +413,13 @@ namespace FFXIVHSLib
         //Determine if id necessary
         public int id { get; set; }
         public int modelId { get; set; }
+        public List<int> animScriptIds { get; set; }
         public Transform transform { get; set; }
+
+        public MapModelEntry()
+        {
+            this.animScriptIds = new List<int>();
+        }
     }
 
     public class MapColor
@@ -409,6 +445,7 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public int layerId { get; set; }
         public List<int> modelIds { get; set; }
+        public List<int> animScriptIds { get; set; }
         public Transform transform { get; set; }
         public string avfxPath { get; set; }
         public string modelPath { get; set; }
@@ -429,6 +466,7 @@ namespace FFXIVHSLib
             transform = new Transform();
             color = new MapColor();
             modelIds = new List<int>();
+            animScriptIds = new List<int>();
         }
     }
 
@@ -483,7 +521,14 @@ namespace FFXIVHSLib
         public string filePath { get; set; }
         public string fileName { get; set; }
 
+        public List<int> animScriptIds { get; set; }
+
         public Transform transform { get; set; }
+
+        public MapSoundEntry()
+        {
+            this.animScriptIds = new List<int>();
+        }
 
         public override bool Equals(object l)
         {
@@ -491,6 +536,44 @@ namespace FFXIVHSLib
             {
                 MapSoundEntry m = (MapSoundEntry)l;
                 return m.filePath == filePath && m.transform == transform;
+            }
+            return false;
+        }
+    }
+
+    public enum MapAnimRotationAxis
+    {
+        X,
+        Y,
+        Z
+    }
+
+    public class MapAnimScriptEntry
+    {
+        public int id { get; set; }
+        public int animIndex { get; set; }
+        public string parentSgbPath { get; set; }
+        public string name { get; set; }
+        public string scriptFileName { get; set; }
+        public uint targetSgbEntryIndex { get; set; }
+        public MapAnimRotationAxis axis { get; set; }
+        public float fullRotationTime { get; set; }
+        public float delay { get; set; }
+        public uint targetSgbVfxId { get; set; }
+        public uint targetSgbVfx2Id { get; set; }
+        public uint targetSgbSoundStartId { get; set; }
+        public uint targetSgbSoundMidId { get; set; }
+        public uint targetSgbSoundEndId { get; set; }
+
+        public override bool Equals(object l)
+        {
+            // only need to check it has the same entry id in the sgb?
+            if (l is MapAnimScriptEntry)
+            {
+                MapAnimScriptEntry m = (MapAnimScriptEntry)l;
+                return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath && m.targetSgbEntryIndex == targetSgbEntryIndex &&
+                    m.axis == axis && m.fullRotationTime == fullRotationTime && m.delay == delay && m.targetSgbEntryIndex == targetSgbEntryIndex && m.targetSgbVfx2Id == targetSgbVfx2Id &&
+                    m.targetSgbSoundStartId == targetSgbSoundStartId && m.targetSgbSoundMidId == targetSgbSoundMidId && m.targetSgbSoundEndId == m.targetSgbSoundEndId;
             }
             return false;
         }
