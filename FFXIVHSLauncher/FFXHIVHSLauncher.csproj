@@ -114,7 +114,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScriptFIleWriter.cs" />
+    <Compile Include="ScriptFileWriter.cs" />
     <Compile Include="ObjectFileWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

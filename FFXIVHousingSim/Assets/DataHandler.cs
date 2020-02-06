@@ -168,32 +168,41 @@ public static class DataHandler
 	    Debug.Log("_modelMeshes loaded.");
     }
     
+    private static void LoadAnimationScripts()
+    {
+        LoadMapTerrainInfo();
+        _mapScriptNames = new Dictionary<int, string>();
+        _mapScriptObjs = new Dictionary<int, MonoBehaviour>();
+
+        {
+            var scriptFolder = Path.Combine(Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriStr + "\\"), "scripts\\");
+            foreach (MapAnimScriptEntry animScript in _map.animScripts.Values)
+            {
+                if (!_mapScriptNames.ContainsKey(animScript.id))
+                    _mapScriptNames.Add(animScript.id, animScript.name);
+
+                var fname = "./Assets/" + animScript.scriptFileName;
+                File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
+                UnityEditor.AssetDatabase.ImportAsset(fname);
+                UnityEditor.AssetDatabase.Refresh();
+                MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
+
+                if (!_mapScriptObjs.ContainsKey(animScript.id))
+                    _mapScriptObjs.Add(animScript.id, scriptObj);
+            }
+        }
+        //UnityEditor.AssetDatabase.Build();
+    }
+
     private static void LoadTerritory()
     {
         rootGameObj = new GameObject();
         rootGameObj.name = teriStr;
 
-
+        LoadAnimationScripts();
 	    if (DebugLoadMap)
 	    {
-            _mapScriptNames = new Dictionary<int, string>();
-            _mapScriptObjs = new Dictionary<int, MonoBehaviour>();
             LoadMapMeshes();
-            {
-                var scriptFolder = Path.Combine(Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriStr + "\\"),"scripts\\");
-                foreach (MapAnimScriptEntry animScript in _map.animScripts.Values)
-                {
-                    if (!_mapScriptNames.ContainsKey(animScript.id))
-                        _mapScriptNames.Add(animScript.id, animScript.name);
-
-                    var fname = "./Assets/" + animScript.scriptFileName;
-                    File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
-                    MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
-
-                    if (!_mapScriptObjs.ContainsKey(animScript.id))
-                        _mapScriptObjs.Add(animScript.id, scriptObj);
-                }
-            }
 
             foreach (MapGroup group in _map.groups.Values)
 			    LoadMapGroup(group);

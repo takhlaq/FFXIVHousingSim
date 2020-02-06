@@ -41,11 +41,11 @@ public class rot : MonoBehaviour {
             outStr += "\tvoid Update() {\n\t";
             outStr += "\ttransform.Rotate";
             if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.X)
-                outStr += $"(Time.deltaTime * {entry.fullRotationTime / 10.0f}f, 0.0f, 0.0f);";
+                outStr += $"(Time.deltaTime * {entry.fullRotationTime / 100.0f}f, 0.0f, 0.0f);";
             else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Y)
-                outStr += $"(0.0f, Time.deltaTime * {entry.fullRotationTime / 10.0f}f, 0.0f);";
+                outStr += $"(0.0f, Time.deltaTime * {entry.fullRotationTime / 100.0f}f, 0.0f);";
             else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Z)
-                outStr += $"(0.0f, 0.0f, Time.deltaTime * {entry.fullRotationTime / 10.0f});";
+                outStr += $"(0.0f, 0.0f, Time.deltaTime * {entry.fullRotationTime / 100.0f}f);";
 
             outStr += "\n\t}";
             outStr += "\n}\n";
