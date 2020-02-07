@@ -18,18 +18,18 @@ namespace FFXIVHSLauncher
             float newDelay = (float)Math.Sqrt(entry.delay * entry.delay);
 
             outStr += "\tfloat delay = " + newDelay + "f;\n";
-            
+            outStr += "\tfloat fullRotationTime = " + entry.fullRotationTime + "f;\n";
             outStr += "\tvoid Start(){}\n\n";
             outStr += "\tvoid Update() {\n";
 
-            outStr += "\t\tif (delay >= 0.0f) { delay -= 100 / Time.deltaTime; return; }\n";
+            outStr += "\t\tif (delay >= 0.0f) { delay -= Time.deltaTime * 10.0f; return; }\n";
             outStr += "\t\ttransform.Rotate";
             if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.X)
-                outStr += $"({100 / entry.fullRotationTime}f, 0.0f, 0.0f);";
+                outStr += $"((float)(100.0f / fullRotationTime), 0.0f, 0.0f);";
             else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Y)
-                outStr += $"(0.0f, {100 / entry.fullRotationTime}f, 0.0f);";
+                outStr += $"(0.0f, (float)(100.0f / fullRotationTime), 0.0f);";
             else if (entry.axis == FFXIVHSLib.MapAnimRotationAxis.Z)
-                outStr += $"(0.0f, 0.0f, {100 / entry.fullRotationTime}f);";
+                outStr += $"(0.0f, 0.0f, (float)(100.0f / fullRotationTime));";
 
             outStr += "\n\t}";
             outStr += "\n}\n";
