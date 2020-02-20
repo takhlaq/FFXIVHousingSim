@@ -218,9 +218,12 @@ namespace FFXIVHSLib
 
         public Dictionary<int, MapAnimScriptEntry> animScripts { get; set; }
 
+        public Dictionary<int, MapMovePathScriptEntry> movePathScripts { get; set; }
+
         public Map()
         {
             this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
+            this.movePathScripts = new Dictionary<int, MapMovePathScriptEntry>();
         }
 
         public void AddMapGroup(MapGroup group)
@@ -326,6 +329,22 @@ namespace FFXIVHSLib
             this.animScripts.Add(id, se);
             return id;
         }
+
+        public int TryAddUniqueMovePathScript(MapMovePathScriptEntry se)
+        {
+            if (this.movePathScripts == null)
+                this.movePathScripts = new Dictionary<int, MapMovePathScriptEntry>();
+
+            var res = movePathScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
+
+            if (res.Count() == 1)
+                return res.Single().Key;
+
+            int id = this.movePathScripts.Count;
+            se.id = id;
+            this.movePathScripts.Add(id, se);
+            return id;
+        }
     }
 
     public class MapGroup
@@ -346,6 +365,7 @@ namespace FFXIVHSLib
         public List<MapVfxEntry> vfx;
         public List<MapSoundEntry> sounds;
         public List<int> animScriptRefs;
+        public List<int> movePathScriptRefs;
 
         public MapGroup()
         {
@@ -402,6 +422,13 @@ namespace FFXIVHSLib
             if (animScriptRefs == null)
                 animScriptRefs = new List<int>();
             animScriptRefs.Add(mse.id);
+        }
+
+        public void AddEntry(MapMovePathScriptEntry mse)
+        {
+            if (movePathScriptRefs == null)
+                movePathScriptRefs = new List<int>();
+            movePathScriptRefs.Add(mse.id);
         }
     }
 
@@ -547,6 +574,61 @@ namespace FFXIVHSLib
         Y,
         Z
     }
+    public enum MapMovePathModeLayer
+    {
+        None_4 = 0x0,
+        SGAction = 0x1,
+        Timeline_1 = 0x2,
+    };
+    public enum MapRotationTypeLayer
+    {
+        NoRotate = 0x0,
+        AllAxis = 0x1,
+        YAxisOnly = 0x2,
+    };
+
+    public class MapMovePathScriptEntry
+    {
+        // name = "MOVE_" + id + ".cs";
+        public int id { get; set; }
+        public string name { get; set; }
+        public string scriptFileName { get; set; }
+        public MapMovePathModeLayer mode { get; set; }
+        public byte autoPlay { get; set; }
+        public ushort time { get; set; }
+        public byte loop { get; set; }
+        public byte reverse { get; set; }
+        public MapRotationTypeLayer rotation { get; set; }
+        public ushort accelerateTime { get; set; }
+        public ushort decelerateTime { get; set; }
+
+        public float horizontalSwingRange0 { get; set; }
+        public float horizontalSwingRange1 { get; set; }
+
+        public float swingMoveSpeedRange0 { get; set; }
+        public float swingMoveSpeedRange1 { get; set; }
+
+        public float swingRotation0 { get; set; }
+        public float swingRotation1 { get; set; }
+
+        public float swingRotationSpeedRange0 { get; set; }
+        public float swingRotationSpeedRange1 { get; set; }
+
+        public override bool Equals(object l)
+        {
+            if (l is MapMovePathScriptEntry)
+            {
+                MapMovePathScriptEntry m = (MapMovePathScriptEntry)l;
+                return m.mode == mode && m.autoPlay == autoPlay && m.time == time && m.loop == loop && m.reverse == reverse &&
+                    m.rotation == rotation && m.accelerateTime == accelerateTime && m.decelerateTime == decelerateTime &&
+                    m.horizontalSwingRange0 == horizontalSwingRange0 && m.horizontalSwingRange1 == horizontalSwingRange1 &&
+                    m.swingMoveSpeedRange0 == swingMoveSpeedRange0 && m.swingMoveSpeedRange1 == swingMoveSpeedRange1 &&
+                    m.swingRotation0 == swingRotation0 && m.swingRotation1 == swingRotation1 &&
+                    m.swingRotationSpeedRange0 == swingRotationSpeedRange0 && m.swingRotationSpeedRange1 == swingRotationSpeedRange1;
+            }
+            return false;
+        }
+    };
 
     public class MapAnimScriptEntry
     {

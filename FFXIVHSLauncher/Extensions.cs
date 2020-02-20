@@ -330,6 +330,33 @@ namespace FFXIVHSLauncher
             return mse;
         }
 
+        public static MapMovePathScriptEntry ToMapMovePathScriptEntry(this SaintCoinach.Graphics.Lgb.LgbGimmickEntry.MovePathSettings m, SaintCoinach.Graphics.Lgb.LgbGimmickEntry.HeaderData header)
+        {
+            MapMovePathScriptEntry mse = new MapMovePathScriptEntry();
+
+            mse.mode = (MapMovePathModeLayer)m.Mode;
+            
+            mse.name = "MOVE_" + header.GimmickId;
+            mse.scriptFileName = mse.name + ".cs";
+
+            mse.autoPlay = m.AutoPlay;
+            mse.time = m.Time;
+            mse.loop = m.Loop;
+            mse.reverse = m.Reverse;
+            mse.rotation = (MapRotationTypeLayer)m.Rotation;
+            mse.accelerateTime = m.AccelerateTime;
+            mse.decelerateTime = m.DecelerateTime;
+            mse.horizontalSwingRange0 = m.HorizontalSwingRange[0];
+            mse.horizontalSwingRange1 = m.HorizontalSwingRange[1];
+            mse.swingMoveSpeedRange0 = m.SwingMoveSpeedRange[0];
+            mse.swingMoveSpeedRange1 = m.SwingMoveSpeedRange[1];
+            mse.swingRotation0 = m.SwingRotation[0];
+            mse.swingRotation1 = m.SwingRotation[1];
+            mse.swingRotationSpeedRange0 = m.SwingRotationSpeedRange[0];
+            mse.swingRotationSpeedRange1 = m.SwingRotationSpeedRange[1];
+            return mse;
+        }
+
         public static Quaternion ExtractRotationQuaternion(this Matrix m)
         {
             SharpDX.Quaternion dxRot = SharpDX.Quaternion.RotationMatrix(m);

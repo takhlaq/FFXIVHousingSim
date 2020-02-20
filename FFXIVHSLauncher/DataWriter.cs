@@ -695,8 +695,9 @@ namespace FFXIVHSLauncher
                         MapGroup gimMapGroup = new MapGroup(MapGroup.GroupType.SGB, GetGimmickName(gim.Name, gim.Gimmick.File.Path));
                         gimMapGroup.groupTransform = TransformFromGimmickHeader(gim.Header);
 
+                        
                         AddSgbModelsToMap(ref map, ref gimMapGroup, gim.Gimmick);
-                        AddRotationAnimToMapGroup(ref map, gim.Gimmick, ref gimMapGroup, gim.Header.GimmickId);
+                        AddAnimationsToMapGroup(ref map, gim.Gimmick, ref gimMapGroup, gim.Header, gim.MoveSettings);
 
                         foreach (var rootGimGroup in gim.Gimmick.Data.OfType<SgbGroup>())
                         {
@@ -708,7 +709,7 @@ namespace FFXIVHSLauncher
                                     rootGimMapGroup.groupTransform = TransformFromGimmickHeader(rootGimEntry.Header);
                                     
                                     AddSgbModelsToMap(ref map, ref rootGimMapGroup, rootGimEntry.Gimmick);
-                                    AddRotationAnimToMapGroup(ref map, gim.Gimmick, ref rootGimMapGroup, rootGimEntry.Header.GimmickId);
+                                    AddAnimationsToMapGroup(ref map, gim.Gimmick, ref rootGimMapGroup, rootGimEntry.Header, rootGimEntry.MovePathSettings);
 
                                     foreach (var subGimGroup in rootGimEntry.Gimmick.Data.OfType<SgbGroup>())
                                     {
@@ -718,7 +719,7 @@ namespace FFXIVHSLauncher
                                             subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
 
                                             AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
-                                            AddRotationAnimToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header.GimmickId);
+                                            AddAnimationsToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header, rootGimEntry.MovePathSettings);
 
                                             rootGimMapGroup.AddGroup(subGimMapGroup);
                                         }
@@ -739,7 +740,7 @@ namespace FFXIVHSLauncher
                         gimMapGroup.groupTransform = TransformFromGimmickHeader(eobj.Header);
 
                         AddSgbModelsToMap(ref map, ref gimMapGroup, eobj.Gimmick);
-                        AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref gimMapGroup, eobj.Header.GimmickId);
+                        AddAnimationsToMapGroup(ref map, eobj.Gimmick, ref gimMapGroup, eobj.Header.GimmickId);
 
                         foreach (var rootGimGroup in eobj.Gimmick.Data.OfType<SgbGroup>())
                         {
@@ -751,7 +752,7 @@ namespace FFXIVHSLauncher
                                     rootGimMapGroup.groupTransform = TransformFromGimmickHeader(rootGimEntry.Header);
 
                                     AddSgbModelsToMap(ref map, ref rootGimMapGroup, rootGimEntry.Gimmick);
-                                    AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref rootGimMapGroup, rootGimEntry.Header.GimmickId);
+                                    AddAnimationsToMapGroup(ref map, eobj.Gimmick, ref rootGimMapGroup, rootGimEntry.Header, rootGimEntry.MovePathSettings);
 
                                     foreach (var subGimGroup in rootGimEntry.Gimmick.Data.OfType<SgbGroup>())
                                     {
@@ -761,7 +762,7 @@ namespace FFXIVHSLauncher
                                             subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
 
                                             AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
-                                            AddRotationAnimToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header.GimmickId);
+                                            AddAnimationsToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header, subGimEntry.MovePathSettings);
 
                                             rootGimMapGroup.AddGroup(subGimMapGroup);
                                         }
@@ -777,7 +778,7 @@ namespace FFXIVHSLauncher
                                     rootGimMapGroup.groupTransform = Transform.Empty;
 
                                     AddSgbModelsToMap(ref map, ref rootGimMapGroup, sgb1cEntry.Gimmick);
-                                    AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref rootGimMapGroup, sgb1cEntry.Header.Index);
+                                    //AddRotationAnimToMapGroup(ref map, eobj.Gimmick, ref rootGimMapGroup, sgb1cEntry.Header.Index);
 
                                     foreach (var subGimGroup in sgb1cEntry.Gimmick.Data.OfType<SgbGroup>())
                                     {
@@ -787,7 +788,7 @@ namespace FFXIVHSLauncher
                                             subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
 
                                             AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
-                                            AddRotationAnimToMapGroup(ref map, sgb1cEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header.GimmickId);
+                                            //AddRotationAnimToMapGroup(ref map, sgb1cEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header.GimmickId);
 
                                             rootGimMapGroup.AddGroup(subGimMapGroup);
                                         }
@@ -827,7 +828,23 @@ namespace FFXIVHSLauncher
         /// <param name="parent">Parent SGB File of mgToApplyRots and mgGimEntry</param>
         /// <param name="mgToApplyRots">MapGroup to apply scripts to</param>
         /// <param name="mgGimmickId">MapGroup's GimmickEntry id in parent's SGB file</param>
-        private static void AddRotationAnimToMapGroup(ref Map m, SgbFile parent, ref MapGroup mgToApplyRots, uint mgGimmickId)
+        private static void AddAnimationsToMapGroup(ref Map m, SgbFile parent, ref MapGroup mgToApplyRots, LgbGimmickEntry.HeaderData header, LgbGimmickEntry.MovePathSettings movePathSettings)
+        {
+            uint mgGimmickId = header.GimmickId;
+            // add rotation 
+            var animList = m.animScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
+            foreach (var animScript in animList)
+                if (animScript.targetSgbEntryIndex == mgGimmickId)
+                    mgToApplyRots.AddEntry(animScript);
+            // add movepathsettings
+            {
+                var mse = movePathSettings.ToMapMovePathScriptEntry(header);
+                m.TryAddUniqueMovePathScript(mse);
+                mgToApplyRots.AddEntry(mse);
+            }
+        }
+
+        private static void AddAnimationsToMapGroup(ref Map m, SgbFile parent, ref MapGroup mgToApplyRots, uint mgGimmickId)
         {
             // add rotation 
             var animList = m.animScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
@@ -1083,6 +1100,12 @@ namespace FFXIVHSLauncher
                 Directory.CreateDirectory(outpath);
 
             foreach (MapAnimScriptEntry entry in map.animScripts.Values)
+            {
+                var path = Path.Combine(outpath, entry.scriptFileName);
+                ScriptFileWriter.WriteScriptFile(path, entry);
+            }
+
+            foreach (MapMovePathScriptEntry entry in map.movePathScripts.Values)
             {
                 var path = Path.Combine(outpath, entry.scriptFileName);
                 ScriptFileWriter.WriteScriptFile(path, entry);

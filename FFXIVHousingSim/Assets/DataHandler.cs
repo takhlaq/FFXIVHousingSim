@@ -47,8 +47,10 @@ public static class DataHandler
     private static Dictionary<int, CustomMesh[]> _modelMeshes;
 	private static Dictionary<int, Mesh[][][]> _exteriorFixtureMeshes;
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
-    private static Dictionary<int, string> _mapScriptNames;
-    private static Dictionary<int, MonoBehaviour> _mapScriptObjs;
+    private static Dictionary<int, string> _mapAnimScriptNames;
+    private static Dictionary<int, string> _mapMovePathScriptNames;
+    private static Dictionary<int, MonoBehaviour> _mapAnimScriptObjs;
+    private static Dictionary<int, MonoBehaviour> _mapMovePathScriptObjs;
 
     private static Territory _territory = (Territory) 999;
     private static string _teriStr;
@@ -167,23 +169,39 @@ public static class DataHandler
     private static void LoadAnimationScripts()
     {
         LoadMapTerrainInfo();
-        _mapScriptNames = new Dictionary<int, string>();
-        _mapScriptObjs = new Dictionary<int, MonoBehaviour>();
+        _mapAnimScriptNames = new Dictionary<int, string>();
+        _mapAnimScriptObjs = new Dictionary<int, MonoBehaviour>();
+        _mapMovePathScriptNames = new Dictionary<int, string>();
+        _mapMovePathScriptObjs = new Dictionary<int, MonoBehaviour>();
 
         {
             var scriptFolder = Path.Combine(Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriStr + "\\"), "scripts\\");
             foreach (MapAnimScriptEntry animScript in _map.animScripts.Values)
             {
-                if (!_mapScriptNames.ContainsKey(animScript.id))
-                    _mapScriptNames.Add(animScript.id, animScript.name);
+                if (!_mapAnimScriptNames.ContainsKey(animScript.id))
+                    _mapAnimScriptNames.Add(animScript.id, animScript.name);
 
                 var fname = "./Assets/" + animScript.scriptFileName;
                 File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
                 UnityEditor.AssetDatabase.ImportAsset(fname);
                 MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
 
-                if (!_mapScriptObjs.ContainsKey(animScript.id))
-                    _mapScriptObjs.Add(animScript.id, scriptObj);
+                if (!_mapAnimScriptObjs.ContainsKey(animScript.id))
+                    _mapAnimScriptObjs.Add(animScript.id, scriptObj);
+            }
+
+            foreach (MapMovePathScriptEntry movePathScript in _map.movePathScripts.Values)
+            {
+                if (!_mapMovePathScriptNames.ContainsKey(movePathScript.id))
+                    _mapMovePathScriptNames.Add(movePathScript.id, movePathScript.name);
+
+                var fname = "./Assets/" + movePathScript.scriptFileName;
+                File.Copy(Path.Combine(scriptFolder, movePathScript.scriptFileName), "./Assets/" + movePathScript.scriptFileName, true);
+                UnityEditor.AssetDatabase.ImportAsset(fname);
+                MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
+
+                if (!_mapMovePathScriptObjs.ContainsKey(movePathScript.id))
+                    _mapMovePathScriptObjs.Add(movePathScript.id, scriptObj);
             }
         }
         //UnityEditor.AssetDatabase.Build();
@@ -223,7 +241,10 @@ public static class DataHandler
         // anim scripts
         if (group.animScriptRefs != null)
             foreach (var mapScriptId in group.animScriptRefs)
-                groupRootObject.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+                groupRootObject.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
+        if (group.movePathScriptRefs != null)
+            foreach (var mapScriptId in group.movePathScriptRefs)
+                groupRootObject.AddComponent(Type.GetType(_mapMovePathScriptNames[mapScriptId]));
 
         if (parent == null)
 		{
@@ -252,9 +273,9 @@ public static class DataHandler
                 // anim scripts
                 foreach (var mapScriptId in entry.animScriptIds)
                 {
-                    var comp = Type.GetType(_mapScriptNames[mapScriptId]);
+                    var comp = Type.GetType(_mapAnimScriptNames[mapScriptId]);
                     obj.AddComponent(comp);
-                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapScriptNames[mapScriptId] + "\n");
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimScriptNames[mapScriptId] + "\n");
                 }
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
 				obj.GetComponent<Transform>().localPosition = entry.transform.translation;
@@ -347,7 +368,7 @@ public static class DataHandler
 
                     // anim scripts
                     foreach (var mapScriptId in entry.animScriptIds)
-                        obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+                        obj.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
 
                     //GameObject obj = new GameObject();
 
@@ -394,7 +415,7 @@ public static class DataHandler
 
                 // anim scripts
                 foreach (var mapScriptId in entry.animScriptIds)
-                    obj.AddComponent(Type.GetType(_mapScriptNames[mapScriptId]));
+                    obj.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
 
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
                 obj.GetComponent<Transform>().localPosition = entry.transform.translation;
