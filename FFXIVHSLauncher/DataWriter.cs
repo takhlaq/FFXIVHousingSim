@@ -1082,33 +1082,41 @@ namespace FFXIVHSLauncher
                 
             Map map = JsonConvert.DeserializeObject<Map>(json);
 
-            foreach (MapModel model in map.models.Values)
+            if (map.models != null)
             {
-                var path = string.IsNullOrEmpty(model.avfxFilePath) ? model.modelPath : model.avfxFilePath;
-
-                if (realm.Packs.TryGetFile(path, out SaintCoinach.IO.File f))
+                foreach (MapModel model in map.models.Values)
                 {
-                    if (path.Contains("avfx"))
-                        ObjectFileWriter.WriteObjectFile(outpath, new SaintCoinach.Graphics.Avfx.AvfxFile(f));
-                    else
-                        ObjectFileWriter.WriteObjectFile(outpath, (ModelFile)f);
+                    var path = string.IsNullOrEmpty(model.avfxFilePath) ? model.modelPath : model.avfxFilePath;
+
+                    if (realm.Packs.TryGetFile(path, out SaintCoinach.IO.File f))
+                    {
+                        if (path.Contains("avfx"))
+                            ObjectFileWriter.WriteObjectFile(outpath, new SaintCoinach.Graphics.Avfx.AvfxFile(f));
+                        else
+                            ObjectFileWriter.WriteObjectFile(outpath, (ModelFile)f);
+                    }
                 }
             }
-
             outpath = Path.Combine(FFXIVHSPaths.GetRootDirectory(), name, "scripts\\");
             if (!Directory.Exists(outpath))
                 Directory.CreateDirectory(outpath);
 
-            foreach (MapAnimScriptEntry entry in map.animScripts.Values)
+            if (map.animScripts != null)
             {
-                var path = Path.Combine(outpath, entry.scriptFileName);
-                ScriptFileWriter.WriteScriptFile(path, entry);
+                foreach (MapAnimScriptEntry entry in map.animScripts.Values)
+                {
+                    var path = Path.Combine(outpath, entry.scriptFileName);
+                    ScriptFileWriter.WriteScriptFile(path, entry);
+                }
             }
 
-            foreach (MapMovePathScriptEntry entry in map.movePathScripts.Values)
+            if (map.movePathScripts != null)
             {
-                var path = Path.Combine(outpath, entry.scriptFileName);
-                ScriptFileWriter.WriteScriptFile(path, entry);
+                foreach (MapMovePathScriptEntry entry in map.movePathScripts?.Values)
+                {
+                    var path = Path.Combine(outpath, entry.scriptFileName);
+                    ScriptFileWriter.WriteScriptFile(path, entry);
+                }
             }
         }
     }

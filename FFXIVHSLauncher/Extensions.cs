@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using FFXIVHSLib;
 using SaintCoinach.Graphics;
 using SharpDX;
@@ -39,8 +40,14 @@ namespace FFXIVHSLauncher
 
             mModel.modelPath = m.File.Path;
             mModel.modelName = Path.GetFileNameWithoutExtension(mModel.modelPath.Substring(mModel.modelPath.LastIndexOf('/') + 1));
-            mModel.numMeshes = m.GetModel(ModelQuality.High).Meshes.Length;
-
+            try
+            {
+                mModel.numMeshes = m.GetModel(ModelQuality.High).Meshes.Length;
+            }
+            catch (Exception e)
+            {
+                mModel.numMeshes = 0;
+            }
             return mModel;
         }
 

@@ -37,6 +37,9 @@ namespace FFXIVHSLauncher
         private Territory territory;
         private StringBuilder maplist;
         private List<TerritoryType> relevantTerritories = new List<TerritoryType>();
+        private bool _packsLoaded = false;
+        private List<string> validPaths = new List<string>();
+        private HashSet<string> exdPaths = new HashSet<string>();
 
         public MainWindow()
         {
@@ -133,6 +136,9 @@ namespace FFXIVHSLauncher
         //Does not support recursive sgb
         private void getFilesBtn_Click(object sender, RoutedEventArgs e)
         {
+            if (maplist == null)
+                maplist = new StringBuilder();
+
             maplist.Clear();
 
             StringBuilder sb = new StringBuilder(mapPath);
@@ -491,20 +497,122 @@ namespace FFXIVHSLauncher
 
         private void openButton_Click(object sender, RoutedEventArgs e)
         {
-            StringBuilder sb = new StringBuilder(mapPath);
 
-            String pathToSave = sb.ToString();
+            // force the game to load all packs
+            if (!_packsLoaded)
+            {
+                foreach (var teri in relevantTerritories)
+                {
+                    SaintCoinach.Graphics.Territory.LgbFileExists(realm.Packs, teri);
+                    exdPaths.Add(teri.Bg);
+                }
 
-            SaintCoinach.IO.File f;
+                // epic bruteforce
+                {
+                    List<string> exNames = new List<string>() { "ffxiv", "ex1", "ex2", "ex3", "ex4", "ex5" };
+                    foreach (var name in exNames)
+                    {
+                        for (int i = 0; i < 9; ++i)
+                        {
+                            // just force sc to load it all
+                            var numberShit = i.ToString("X2") + "_";
+                            var fullPath = "bg/" + name + "/" + numberShit + "z1_ass/";
 
-            if (realm.Packs.FileExists(pathBox.Text.Trim()))
-                f = realm.Packs.GetFile(pathBox.Text.Trim());
-            else
-                return;
-            
-            FileStream s = new FileStream(pathToSave + f.Path.Substring(f.Path.LastIndexOf("/") + 1), FileMode.Create);
-            byte[] data = f.GetData();
-            s.Write(data, 0, data.Length);
+                            try
+                            {
+                                realm.Packs.TryGetFile(fullPath, out var file);
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                    }
+                }
+                _packsLoaded = true;
+
+
+                foreach (var pack in realm.Packs.Packs)
+                {
+                    if (pack.Id.Type != "bg")
+                        continue;
+
+                    if (pack.Source is SaintCoinach.IO.IndexSource)
+                    {
+                        var index = pack.Source as SaintCoinach.IO.IndexSource;
+
+                        foreach (var dir in index.Index.Directories.Values)
+                        {
+                            // only care about /level/
+                            foreach (var indexFile in dir.Files.Values)
+                            {
+                                try
+                                {
+                                    var file = index.GetFile(indexFile.DirectoryKey, indexFile.FileKey);
+                                    if (file.CommonHeader.FileType != SaintCoinach.IO.FileType.Default)
+                                        continue;
+                                    try
+                                    {
+                                        var lvbFile = new SaintCoinach.Graphics.LvbFile(file);
+                                        if (!lvbFile.IsValidLvb)
+                                            continue;
+
+                                        // add /level/ path
+                                        if (lvbFile.LgbPaths.Count > 0)
+                                        {
+                                            var teriName = lvbFile.LgbPaths[0].Split('/')[4];
+
+                                            var folderStr = lvbFile.LgbPaths[0].Substring(0, lvbFile.LgbPaths[0].LastIndexOf('/'));
+                                            var levelFolderStr = folderStr + "/" + teriName;
+                                            //if (exdPaths.Contains(levelFolderStr.Substring(3)))
+                                            //    continue;
+
+                                            //validPaths.Add(folderStr);
+                                            //validPaths.Add(lvbFile.LgbPaths[0].Substring(0, lvbFile.LgbPaths[0].LastIndexOf('/')) + "/" + teriName + ".lvb");
+
+                                            validPaths.Add(levelFolderStr);
+
+                                            foreach (var str in lvbFile.LgbPaths)
+                                            {
+                                                if (str.Contains("bg.lgb"))
+                                                {
+                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/material"));
+                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/texture"));
+                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/level/envl"));
+                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/grass"));
+                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/collision"));
+
+                                                    validPaths.Add(str.Replace("bg.lgb", teriName + ".lvb"));
+                                                    break;
+                                                }
+                                            }
+                                            validPaths.AddRange(lvbFile.LgbPaths);
+
+                                            //packBox.Text = validPaths[validPaths.Count - 1];
+                                            //ExtractMapBtn_Click(null, null);
+                                        }
+                                    }
+                                    catch (Exception except)
+                                    {
+
+                                    }
+                                }
+                                catch (Exception except)
+                                {
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var str in validPaths)
+            {
+                //packBox.Text = str;
+                //ExtractMapBtn_Click(null, null);
+            }
+            File.WriteAllLines("./lgb_dump.txt", validPaths.ToArray());
         }
 
         private void csvButton_Click(object sender, RoutedEventArgs e)

@@ -222,6 +222,10 @@ namespace FFXIVHSLib
 
         public Map()
         {
+            this.groups = new Dictionary<int, MapGroup>();
+            this.models = new Dictionary<int, MapModel>();
+            this.vfx = new Dictionary<int, MapVfxEntry>();
+            this.sounds = new Dictionary<int, MapSoundEntry>();
             this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
             this.movePathScripts = new Dictionary<int, MapMovePathScriptEntry>();
         }

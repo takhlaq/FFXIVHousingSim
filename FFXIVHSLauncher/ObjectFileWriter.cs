@@ -11,28 +11,35 @@ namespace FFXIVHSLauncher
 
         public static void WriteObjectFile(String path, ModelFile mdlFile)
         {
-            Model mdl = mdlFile.GetModelDefinition().GetModel(ModelQuality.High);
-
-            Mesh[] meshes = mdl.Meshes;
-
-            List<Vector3> vsList = new List<Vector3>();
-            List<Vector4> vcList = new List<Vector4>();
-            List<Vector4> vtList = new List<Vector4>();
-            List<Vector3> nmList = new List<Vector3>();
-            List<Vector3> inList = new List<Vector3>();
-            
-            for (int i = 0; i < meshes.Length; i++)
+            try
             {
-                EnumerateFromVertices(meshes[i].Vertices, ref vsList, ref vcList, ref vtList, ref nmList);
-                EnumerateIndices(meshes[i].Indices, ref inList);
-                
-                WriteObjectFileForMesh(path, mdl.Meshes[i].Material.Get(), mdl.Definition.File.Path, i, vsList, vcList, vtList, nmList, inList);
-                
-                vsList.Clear();
-                vcList.Clear();
-                vtList.Clear();
-                nmList.Clear();
-                inList.Clear();
+                Model mdl = mdlFile.GetModelDefinition().GetModel(ModelQuality.High);
+
+                Mesh[] meshes = mdl.Meshes;
+
+                List<Vector3> vsList = new List<Vector3>();
+                List<Vector4> vcList = new List<Vector4>();
+                List<Vector4> vtList = new List<Vector4>();
+                List<Vector3> nmList = new List<Vector3>();
+                List<Vector3> inList = new List<Vector3>();
+
+                for (int i = 0; i < meshes.Length; i++)
+                {
+                    EnumerateFromVertices(meshes[i].Vertices, ref vsList, ref vcList, ref vtList, ref nmList);
+                    EnumerateIndices(meshes[i].Indices, ref inList);
+
+                    WriteObjectFileForMesh(path, mdl.Meshes[i].Material.Get(), mdl.Definition.File.Path, i, vsList, vcList, vtList, nmList, inList);
+
+                    vsList.Clear();
+                    vcList.Clear();
+                    vtList.Clear();
+                    nmList.Clear();
+                    inList.Clear();
+                }
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.Write("FUCKING SHIT MODEL " + mdlFile.Path);
             }
         }
 

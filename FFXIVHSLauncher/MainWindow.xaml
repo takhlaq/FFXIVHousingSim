@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="477" Width="827">
     <Grid Margin="0,0,-0.4,0" Height="447" VerticalAlignment="Top">
-        <Button x:Name="openButton" Content="Extract" HorizontalAlignment="Left" Margin="696,317,0,0" VerticalAlignment="Top" Width="88" Height="23" Click="openButton_Click"/>
+        <Button x:Name="openButton" Content="Dump all Bg files" HorizontalAlignment="Left" Margin="696,317,0,0" VerticalAlignment="Top" Width="113" Height="23" Click="openButton_Click"/>
         <ListBox x:Name="placeBox" HorizontalAlignment="Left" Height="313" Margin="453,41,0,0" VerticalAlignment="Top" Width="238" SelectionChanged="placeBox_SelectionChanged"/>
         <Label x:Name="amountLabel" Content="Territories found: " HorizontalAlignment="Left" Margin="453,10,0,0" VerticalAlignment="Top"/>
         <TextBox x:Name="box" HorizontalAlignment="Left" Height="396" Margin="10,9,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="425" AcceptsReturn="True"/>
