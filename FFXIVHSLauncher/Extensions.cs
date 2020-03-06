@@ -46,6 +46,7 @@ namespace FFXIVHSLauncher
             }
             catch (Exception e)
             {
+                System.Diagnostics.Debug.Write(mModel.modelPath + " ERROR " + e);
                 mModel.numMeshes = 0;
             }
             return mModel;
