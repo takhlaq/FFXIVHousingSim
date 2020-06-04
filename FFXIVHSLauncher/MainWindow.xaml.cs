@@ -19,6 +19,7 @@ using Directory = System.IO.Directory;
 using File = System.IO.File;
 using Territory = SaintCoinach.Graphics.Territory;
 using Vector3 = SaintCoinach.Graphics.Vector3;
+using System.Collections.Concurrent;
 
 namespace FFXIVHSLauncher
 {
@@ -37,8 +38,9 @@ namespace FFXIVHSLauncher
         private Territory territory;
         private StringBuilder maplist;
         private List<TerritoryType> relevantTerritories = new List<TerritoryType>();
+
         private bool _packsLoaded = false;
-        private List<string> validPaths = new List<string>();
+        private ConcurrentDictionary<string, byte> validPaths = new ConcurrentDictionary<string, byte>();
         private HashSet<string> exdPaths = new HashSet<string>();
 
         public MainWindow()
@@ -517,15 +519,10 @@ namespace FFXIVHSLauncher
                             // just force sc to load it all
                             var numberShit = i.ToString("X2") + "_";
                             var fullPath = "bg/" + name + "/" + numberShit + "z1_ass/";
+                            var fullPath2 = "bgcommon/" + name + "/" + numberShit + "z1_ass/";
 
-                            try
-                            {
-                                realm.Packs.TryGetFile(fullPath, out var file);
-                            }
-                            catch (Exception ex)
-                            {
-
-                            }
+                            try { realm.Packs.TryGetFile(fullPath, out var file); } catch (Exception ex) { }
+                            try { realm.Packs.TryGetFile(fullPath, out var file); } catch (Exception ex) { }
                         }
                     }
                 }
@@ -534,28 +531,84 @@ namespace FFXIVHSLauncher
 
                 foreach (var pack in realm.Packs.Packs)
                 {
-                    if (pack.Id.Type != "bg")
+                    if (!pack.Id.Type.Contains("bg"))
                         continue;
 
                     if (pack.Source is SaintCoinach.IO.IndexSource)
                     {
                         var index = pack.Source as SaintCoinach.IO.IndexSource;
 
-                        foreach (var dir in index.Index.Directories.Values)
+                        Parallel.ForEach(index.Index.Directories.Values.AsEnumerable(), (dir) =>
+                       {
+                            // only care about /level/
+                            Parallel.ForEach(dir.Files.Values.AsEnumerable(), (x) =>
+                           {
+                               try
+                               {
+                                   var file = index.GetFile(x.DirectoryKey, x.FileKey);
+                                    //if (file.CommonHeader.FileType != SaintCoinach.IO.FileType.Default)
+                                    //    continue;
+                                    try
+                                   {
+                                       var lvbFile = new SaintCoinach.Graphics.LvbFile(file);
+                                       if (!lvbFile.IsValidLvb)
+                                           return;
+
+                                        // add /level/ path
+                                        if (lvbFile.LgbPaths.Count > 0)
+                                       {
+                                           var teriName = lvbFile.LgbPaths[0].Split('/')[4];
+
+                                           var folderStr = lvbFile.LgbPaths[0].Substring(0, lvbFile.LgbPaths[0].LastIndexOf('/'));
+                                           var levelFolderStr = folderStr + "/" + teriName;
+                                            //if (exdPaths.Contains(levelFolderStr.Substring(3)))
+                                            //    continue;
+
+                                            //validPaths.Add(folderStr);
+                                            //validPaths.Add(lvbFile.LgbPaths[0].Substring(0, lvbFile.LgbPaths[0].LastIndexOf('/')) + "/" + teriName + ".lvb");
+
+                                            //validPaths.Add(levelFolderStr);
+
+                                            foreach (var str in lvbFile.LgbPaths)
+                                               validPaths.TryAdd(str, 1);
+                                            //validPaths.AddRange(lvbFile.LgbPaths);
+
+                                            //packBox.Text = validPaths[validPaths.Count - 1];
+                                            //ExtractMapBtn_Click(null, null);
+                                        }
+                                   }
+                                   catch (Exception except)
+                                   {
+
+                                   }
+                               }
+                               catch (Exception except)
+                               {
+
+                               }
+                           });
+                       });
+                    }
+                    else if (pack.Source is SaintCoinach.IO.Index2Source)
+                    {
+                        var index = pack.Source as SaintCoinach.IO.Index2Source;
+
+                        Parallel.ForEach(index.Index.Files.Values.AsEnumerable(), (x) =>
                         {
                             // only care about /level/
-                            foreach (var indexFile in dir.Files.Values)
+                            //Parallel.ForEach(dir.Files.Values.AsEnumerable(), (x) =>
                             {
                                 try
                                 {
-                                    var file = index.GetFile(indexFile.DirectoryKey, indexFile.FileKey);
-                                    if (file.CommonHeader.FileType != SaintCoinach.IO.FileType.Default)
-                                        continue;
+                                    var file = index.GetFile(x.FileKey);
+                                    ;// index.GetFile(x.DirectoryKey, x.FileKey);
+                                    //if (file.CommonHeader.FileType != SaintCoinach.IO.FileType.Default)
+                                    //    continue;
                                     try
                                     {
                                         var lvbFile = new SaintCoinach.Graphics.LvbFile(file);
                                         if (!lvbFile.IsValidLvb)
-                                            continue;
+                                            return;
 
                                         // add /level/ path
                                         if (lvbFile.LgbPaths.Count > 0)
@@ -570,23 +623,11 @@ namespace FFXIVHSLauncher
                                             //validPaths.Add(folderStr);
                                             //validPaths.Add(lvbFile.LgbPaths[0].Substring(0, lvbFile.LgbPaths[0].LastIndexOf('/')) + "/" + teriName + ".lvb");
 
-                                            validPaths.Add(levelFolderStr);
+                                            //validPaths.Add(levelFolderStr);
 
                                             foreach (var str in lvbFile.LgbPaths)
-                                            {
-                                                if (str.Contains("bg.lgb"))
-                                                {
-                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/material"));
-                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/texture"));
-                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/level/envl"));
-                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/grass"));
-                                                    validPaths.Add(str.Replace("/level/bg.lgb", "/collision"));
-
-                                                    validPaths.Add(str.Replace("bg.lgb", teriName + ".lvb"));
-                                                    break;
-                                                }
-                                            }
-                                            validPaths.AddRange(lvbFile.LgbPaths);
+                                                validPaths.TryAdd(str, 1);
+                                            //validPaths.AddRange(lvbFile.LgbPaths);
 
                                             //packBox.Text = validPaths[validPaths.Count - 1];
                                             //ExtractMapBtn_Click(null, null);
@@ -602,7 +643,7 @@ namespace FFXIVHSLauncher
 
                                 }
                             }
-                        }
+                        });
                     }
                 }
             }
@@ -612,7 +653,7 @@ namespace FFXIVHSLauncher
                 //packBox.Text = str;
                 //ExtractMapBtn_Click(null, null);
             }
-            File.WriteAllLines("./lgb_dump.txt", validPaths.ToArray());
+            File.WriteAllLines("./lgb_dump.txt", validPaths.Keys.ToArray());
         }
 
         private void csvButton_Click(object sender, RoutedEventArgs e)
