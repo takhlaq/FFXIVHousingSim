@@ -20,6 +20,7 @@ using File = System.IO.File;
 using Territory = SaintCoinach.Graphics.Territory;
 using Vector3 = SaintCoinach.Graphics.Vector3;
 using System.Collections.Concurrent;
+using System.Windows.Media.TextFormatting;
 
 namespace FFXIVHSLauncher
 {
@@ -1039,15 +1040,21 @@ namespace FFXIVHSLauncher
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
-                var query = pathBox.Text;
+                var query = pathBox.Text.ToLower();
                 if (query.Trim() != "")
                 {
                     List<TerritoryType> teris = new List<TerritoryType>();
 
                     foreach (var teri in relevantTerritories)
-                        if (teri.Name.ToString().Contains(query) || teri.PlaceName.ToString().Contains(query))
-                            teris.Add(teri);
+                    {
+                        var name = teri.Name.ToString().ToLower();
+                        var placeName = teri.PlaceName.ToString().ToLower();
+                        var zoneName = teri.ZonePlaceName.ToString().ToLower();
+                        var regionName = teri.RegionPlaceName.ToString().ToLower();
 
+                        if (name.Contains(query) || placeName.Contains(query) || zoneName.Contains(query) || regionName.Contains(query))
+                            teris.Add(teri);
+                    }
                     placeBox.ItemsSource = teris;
                 }
                 else

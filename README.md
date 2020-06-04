@@ -23,7 +23,7 @@ Currently, the project has some functionality including (assume all functionalit
     - Change the string `GameDirectory` in `FFXIVHSLib.FFXIVHSPaths` to your FFXIV game path e.g. `private const string GameDirectory = @"C:\Program Files (x86)\SquareEnix\FINAL FANTASY XIV - Heavensward\";`
   - If the reference to `UnityEngine.dll` is broken, at the top of `Visual Studio`, click `Tools > NuGet Package Manager > Package Manager Console`. Once it appears, enter `Add-Unity3DReference -AssemblyName UnityEngine -ProjectName FFXIVHSLib` and press enter. If this doesn't work, make sure you restored the NuGet packages.
   - A post-build script copies `FFXIVHSLib.dll` to the Unity project. If this doesn't take place, copy it manually.
-- Select a territory (`search by typing the shorthand e.g. f1t1`) and click `Extract Map JSON` __twice__. This is what extracts models. 
+- Select a territory (`search by typing the name/region`) and click `Extract Map JSON` __twice__. This is what extracts models. 
   - For unlisted territories, enter the path in `Load Dat Path` box and click `Extract Map JSON` __twice__ (make sure no item is selected).
 - Open the Unity project by opening the folder `FFXIVHousingSim` in the root directory of the repository you cloned. Click `File > Open > [navigate into] Scenes > MainScene.unity`.
 - You may need to install the asset store packages used in the project. Open the asset store from `Window > General > Asset Store` and search for and import `json.net`.
