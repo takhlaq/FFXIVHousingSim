@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using FFXIVHSLib;
 using SaintCoinach.Graphics;
 using SharpDX;
@@ -363,6 +364,31 @@ namespace FFXIVHSLauncher
             mse.swingRotationSpeedRange0 = m.SwingRotationSpeedRange[0];
             mse.swingRotationSpeedRange1 = m.SwingRotationSpeedRange[1];
             return mse;
+        }
+
+        public static MapAnimTransformScriptEntry ToMapMoveAnimTransformScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimTransform2 s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        {
+            MapAnimTransformScriptEntry mst = new MapAnimTransformScriptEntry();
+            
+            mst.animIndex = animIndex;
+            mst.parentSgbPath = parent.File.Path;
+            mst.targetSgMemberIndexes = s.TargetSGMemberIDs.ToList();
+            mst.translation = s.Translation.ToLibVector3();
+            mst.rotation = s.Rotation.ToLibVector3();
+            mst.scale = s.Scale.ToLibVector3();
+            mst.loop = s.Loop;
+
+            mst.enabled = s.Enabled;
+            mst.offset = s.Offset.ToLibVector3();
+            mst.randomRate = s.RandomRate;
+            mst.time = s.Time;
+            mst.startEndTime = s.StartEndTime;
+            mst.curveType = (MapAnimTransformCurveType)s.CurveType;
+            mst.movementType = (MapAnimTransformMovementType)s.MovementType;
+            
+            mst.name = "TFORM_" + Path.GetFileNameWithoutExtension(mst.parentSgbPath) + "_" + mst.animIndex;
+            mst.scriptFileName = mst.name + ".cs";
+            return mst;
         }
 
         public static Quaternion ExtractRotationQuaternion(this Matrix m)

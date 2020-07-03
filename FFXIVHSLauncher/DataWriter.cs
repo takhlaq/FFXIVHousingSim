@@ -17,7 +17,7 @@ using Map = FFXIVHSLib.Map;
 using Quaternion = FFXIVHSLib.Quaternion;
 using Territory = FFXIVHSLib.Territory;
 using Vector3 = FFXIVHSLib.Vector3;
-
+using System.Windows.Interop;
 
 namespace FFXIVHSLauncher
 {
@@ -842,6 +842,16 @@ namespace FFXIVHSLauncher
                 m.TryAddUniqueMovePathScript(mse);
                 mgToApplyRots.AddEntry(mse);
             }
+
+            // add transforms
+            var animTransformList = m.animTransformScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
+            {
+                foreach (var animScript in animTransformList)
+                {
+                    if (animScript.targetSgMemberIndexes.Contains(mgGimmickId))
+                        mgToApplyRots.AddEntry(animScript);
+                }
+            }
         }
 
         private static void AddAnimationsToMapGroup(ref Map m, SgbFile parent, ref MapGroup mgToApplyRots, uint mgGimmickId)
@@ -850,6 +860,12 @@ namespace FFXIVHSLauncher
             var animList = m.animScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
             foreach (var animScript in animList)
                 if (animScript.targetSgbEntryIndex == mgGimmickId)
+                    mgToApplyRots.AddEntry(animScript);
+
+            // add transform
+            var animTransformList = m.animTransformScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
+            foreach (var animScript in animTransformList)
+                if (animScript.targetSgMemberIndexes.Contains(mgGimmickId))
                     mgToApplyRots.AddEntry(animScript);
         }
 
@@ -870,7 +886,16 @@ namespace FFXIVHSLauncher
                 int animId = map.TryAddUniqueAnimScript(mAnim);
             }
 
+            for (int i = 0; i < file.SGSettings.Transformations.Count; ++i)
+            {
+                var anim = file.SGSettings.Transformations[i];
+
+                MapAnimTransformScriptEntry mAnim = anim.ToMapMoveAnimTransformScriptEntry(file, i);
+                int animId = map.TryAddUniqueAnimTransformScript(mAnim);
+            }
+
             var animList = map.animScripts.Values.Where(_ => _.parentSgbPath == file.File.Path);
+            var animTransformList = map.animTransformScripts.Values.Where(_ => _.parentSgbPath == file.File.Path);
 
             foreach (var sgbGroup in file.Data.OfType<SgbGroup>())
             {
@@ -887,6 +912,10 @@ namespace FFXIVHSLauncher
                     foreach (var animScript in animList)
                         if (animScript.targetSgbEntryIndex == mdl.Header.GimmickId)
                             mMdlE.animScriptIds.Add(animScript.id);
+                    // add transform scripts
+                    foreach (var animScript in animTransformList)
+                        if (animScript.targetSgMemberIndexes.Contains(mdl.Header.GimmickId))
+                            mMdlE.animTransformScriptIds.Add(animScript.id);
                 }
 
                 foreach (var vfx in sgbGroup.Entries.OfType<SgbVfxEntry>())
@@ -906,6 +935,9 @@ namespace FFXIVHSLauncher
                     foreach (var animScript in animList)
                         if (animScript.targetSgbVfxId == vfx.Header.UnknownId || animScript.targetSgbVfx2Id == vfx.Header.UnknownId)
                             mv.animScriptIds.Add(animScript.id);
+                    foreach (var animScript in animTransformList)
+                        if (animScript.targetSgMemberIndexes.Contains(vfx.Header.UnknownId))
+                            mv.animTransformScriptIds.Add(animScript.id);
 
                     mg.AddEntry(mv);
                 }
@@ -931,6 +963,12 @@ namespace FFXIVHSLauncher
                             ms.animScriptIds.Add(animScript.id);
                     }
 
+                    foreach (var animScript in animTransformList)
+                    {
+                        var sgId = se.Header.UnknownId;
+                        if (animScript.targetSgMemberIndexes.Contains(sgId))
+                            ms.animScriptIds.Add(animScript.id);
+                    }
                     mg.AddEntry(ms);
                 }
 

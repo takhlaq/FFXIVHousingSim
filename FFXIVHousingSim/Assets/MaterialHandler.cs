@@ -203,10 +203,11 @@ public class MaterialHandler
 				thisLine = str.ReadLine();
 			}
 		}
-		
-//		if (!DebugLoadFiles)
-//			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
+
+		//		if (!DebugLoadFiles)
+		//			Debug.LogFormat("Added material named {0} with shader {1}", thisMaterial.name, thisMaterial.shader.name);
 		//if (!_materialDictionary.ContainsKey(thisMaterial.name))
+		thisMaterial.enableInstancing = true;
 			_materialDictionary.Add(thisMaterial.name, thisMaterial);
         //AssetDatabase.CreateAsset(thisMaterial, thisMaterial.name + ".asset");
         return true;

@@ -218,6 +218,8 @@ namespace FFXIVHSLib
 
         public Dictionary<int, MapAnimScriptEntry> animScripts { get; set; }
 
+        public Dictionary<int, MapAnimTransformScriptEntry> animTransformScripts { get; set; }
+
         public Dictionary<int, MapMovePathScriptEntry> movePathScripts { get; set; }
 
         public Map()
@@ -227,6 +229,7 @@ namespace FFXIVHSLib
             this.vfx = new Dictionary<int, MapVfxEntry>();
             this.sounds = new Dictionary<int, MapSoundEntry>();
             this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
+            this.animTransformScripts = new Dictionary<int, MapAnimTransformScriptEntry>();
             this.movePathScripts = new Dictionary<int, MapMovePathScriptEntry>();
         }
 
@@ -334,6 +337,22 @@ namespace FFXIVHSLib
             return id;
         }
 
+        public int TryAddUniqueAnimTransformScript(MapAnimTransformScriptEntry se)
+        {
+            if (this.animTransformScripts == null)
+                this.animTransformScripts = new Dictionary<int, MapAnimTransformScriptEntry>();
+
+            var res = animTransformScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
+
+            if (res.Count() == -1)
+                return res.Single().Key;
+
+            int id = this.animTransformScripts.Count;
+            se.id = id;
+            this.animTransformScripts.Add(id, se);
+            return id;
+        }
+
         public int TryAddUniqueMovePathScript(MapMovePathScriptEntry se)
         {
             if (this.movePathScripts == null)
@@ -369,6 +388,7 @@ namespace FFXIVHSLib
         public List<MapVfxEntry> vfx;
         public List<MapSoundEntry> sounds;
         public List<int> animScriptRefs;
+        public List<int> animTransformScriptrefs;
         public List<int> movePathScriptRefs;
 
         public MapGroup()
@@ -428,6 +448,13 @@ namespace FFXIVHSLib
             animScriptRefs.Add(mse.id);
         }
 
+        public void AddEntry(MapAnimTransformScriptEntry mse)
+        {
+            if (animTransformScriptrefs == null)
+                animTransformScriptrefs = new List<int>();
+            animTransformScriptrefs.Add(mse.id);
+        }
+
         public void AddEntry(MapMovePathScriptEntry mse)
         {
             if (movePathScriptRefs == null)
@@ -445,11 +472,14 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public int modelId { get; set; }
         public List<int> animScriptIds { get; set; }
+
+        public List<int> animTransformScriptIds { get; set; }
         public Transform transform { get; set; }
 
         public MapModelEntry()
         {
             this.animScriptIds = new List<int>();
+            this.animTransformScriptIds = new List<int>();
         }
     }
 
@@ -477,6 +507,8 @@ namespace FFXIVHSLib
         public int layerId { get; set; }
         public List<int> modelIds { get; set; }
         public List<int> animScriptIds { get; set; }
+
+        public List<int> animTransformScriptIds { get; set; }
         public Transform transform { get; set; }
         public string avfxPath { get; set; }
         public string modelPath { get; set; }
@@ -498,6 +530,7 @@ namespace FFXIVHSLib
             color = new MapColor();
             modelIds = new List<int>();
             animScriptIds = new List<int>();
+            animTransformScriptIds = new List<int>();
         }
     }
 
@@ -554,6 +587,8 @@ namespace FFXIVHSLib
 
         public List<int> animScriptIds { get; set; }
 
+        public List<int> animTransformScriptIds { get; set; }
+
         public Transform transform { get; set; }
 
         public MapSoundEntry()
@@ -589,6 +624,21 @@ namespace FFXIVHSLib
         NoRotate = 0x0,
         AllAxis = 0x1,
         YAxisOnly = 0x2,
+    };
+
+    public enum MapAnimTransformCurveType
+    {
+        CurveLinear = 0x0,
+        CurveSpline = 0x1,
+        CurveAcceleration = 0x2,
+        CurveDeceleration = 0x3,
+    };
+
+    public enum MapAnimTransformMovementType
+    {
+        MovementOneWay = 0x0,
+        MovementRoundTrip = 0x1,
+        MovementRepetition = 0x2,
     };
 
     public class MapMovePathScriptEntry
@@ -660,6 +710,46 @@ namespace FFXIVHSLib
                 return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath && m.targetSgbEntryIndex == targetSgbEntryIndex &&
                     m.axis == axis && m.fullRotationTime == fullRotationTime && m.delay == delay && m.targetSgbEntryIndex == targetSgbEntryIndex && m.targetSgbVfx2Id == targetSgbVfx2Id &&
                     m.targetSgbSoundStartId == targetSgbSoundStartId && m.targetSgbSoundMidId == targetSgbSoundMidId && m.targetSgbSoundEndId == m.targetSgbSoundEndId;
+            }
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Class representing SGAnimTransform2
+    /// </summary>
+    public class MapAnimTransformScriptEntry
+    {
+        public int id { get; set; }
+        public int animIndex { get; set; }
+        public List<uint> targetSgMemberIndexes { get; set; }
+        public string parentSgbPath { get; set; }
+        public string name { get; set; }
+        public string scriptFileName { get; set; }
+        public byte loop { get; set; }
+        public Vector3 translation { get; set; }
+        public Vector3 rotation { get; set; }
+        public Vector3 scale { get; set; }
+
+        public byte enabled { get; set; }
+        public Vector3 offset { get; set; }
+        public float randomRate { get; set; }
+        public uint time { get; set; }
+        public uint startEndTime { get; set; }
+        public MapAnimTransformCurveType curveType { get; set; }
+        public MapAnimTransformMovementType movementType { get; set; }
+        public MapAnimTransformScriptEntry()
+        {
+            this.targetSgMemberIndexes = new List<uint>();
+        }
+        public override bool Equals(object l)
+        {
+            if (l is MapAnimTransformScriptEntry)
+            {
+                MapAnimTransformScriptEntry m = (MapAnimTransformScriptEntry)l;
+                return m.id == id && m.animIndex == animIndex && m.targetSgMemberIndexes.Count == targetSgMemberIndexes.Count && m.parentSgbPath == parentSgbPath && m.loop == loop &&
+                    m.translation == translation && m.rotation == rotation && m.scale == scale && m.offset == offset && m.randomRate == randomRate && m.time == time && m.startEndTime == startEndTime &&
+                    m.curveType == curveType && m.movementType == movementType && m.enabled == enabled;
             }
             return false;
         }
