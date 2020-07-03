@@ -47,10 +47,17 @@ public static class DataHandler
     private static Dictionary<int, CustomMesh[]> _modelMeshes;
 	private static Dictionary<int, Mesh[][][]> _exteriorFixtureMeshes;
 	private static Dictionary<int, FFXIVHSLib.Transform[][]> _exteriorFixtureMeshTransforms;
+    
+    // script shits
     private static Dictionary<int, string> _mapAnimScriptNames;
     private static Dictionary<int, string> _mapMovePathScriptNames;
+    private static Dictionary<int, string> _mapAnimTransformScriptNames;
+    private static Dictionary<int, string> _mapAnimDoorScriptNames;
+
     private static Dictionary<int, MonoBehaviour> _mapAnimScriptObjs;
     private static Dictionary<int, MonoBehaviour> _mapMovePathScriptObjs;
+    private static Dictionary<int, MonoBehaviour> _mapAnimTransformScriptObjs;
+    private static Dictionary<int, MonoBehaviour> _mapAnimDoorScriptObjs;
 
     private static Territory _territory = (Territory) 999;
     private static string _teriStr;
@@ -173,6 +180,10 @@ public static class DataHandler
         _mapAnimScriptObjs = new Dictionary<int, MonoBehaviour>();
         _mapMovePathScriptNames = new Dictionary<int, string>();
         _mapMovePathScriptObjs = new Dictionary<int, MonoBehaviour>();
+        _mapAnimTransformScriptNames = new Dictionary<int, string>();
+        _mapAnimTransformScriptObjs = new Dictionary<int, MonoBehaviour>();
+        _mapAnimDoorScriptNames = new Dictionary<int, string>();
+        _mapAnimDoorScriptObjs = new Dictionary<int, MonoBehaviour>();
 
         {
             var scriptFolder = Path.Combine(Path.Combine(FFXIVHSPaths.GetRootDirectory(), teriStr + "\\"), "scripts\\");
@@ -188,6 +199,34 @@ public static class DataHandler
 
                 if (!_mapAnimScriptObjs.ContainsKey(animScript.id))
                     _mapAnimScriptObjs.Add(animScript.id, scriptObj);
+            }
+
+            foreach (MapAnimTransformScriptEntry animScript in _map.animTransformScripts.Values)
+            {
+                if (!_mapAnimTransformScriptNames.ContainsKey(animScript.id))
+                    _mapAnimTransformScriptNames.Add(animScript.id, animScript.name);
+
+                var fname = "./Assets/" + animScript.scriptFileName;
+                File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
+                UnityEditor.AssetDatabase.ImportAsset(fname);
+                MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
+
+                if (!_mapAnimTransformScriptObjs.ContainsKey(animScript.id))
+                    _mapAnimTransformScriptObjs.Add(animScript.id, scriptObj);
+            }
+
+            foreach (MapAnimDoorScriptEntry animScript in _map.animDoorScripts.Values)
+            {
+                if (!_mapAnimDoorScriptNames.ContainsKey(animScript.id))
+                    _mapAnimDoorScriptNames.Add(animScript.id, animScript.name);
+
+                var fname = "./Assets/" + animScript.scriptFileName;
+                File.Copy(Path.Combine(scriptFolder, animScript.scriptFileName), "./Assets/" + animScript.scriptFileName, true);
+                UnityEditor.AssetDatabase.ImportAsset(fname);
+                MonoBehaviour scriptObj = UnityEditor.AssetDatabase.LoadAssetAtPath<MonoBehaviour>(fname);
+
+                if (!_mapAnimDoorScriptObjs.ContainsKey(animScript.id))
+                    _mapAnimDoorScriptObjs.Add(animScript.id, scriptObj);
             }
 
             foreach (MapMovePathScriptEntry movePathScript in _map.movePathScripts.Values)
@@ -277,6 +316,20 @@ public static class DataHandler
                     obj.AddComponent(comp);
                     Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimScriptNames[mapScriptId] + "\n");
                 }
+
+                foreach (var mapScriptId in entry.animTransformScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimTransformScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimTransformScriptNames[mapScriptId] + "\n");
+                }
+
+                foreach (var mapScriptId in entry.animDoorScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimDoorScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimDoorScriptNames[mapScriptId] + "\n");
+                }
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
 				obj.GetComponent<Transform>().localPosition = entry.transform.translation;
 				obj.GetComponent<Transform>().localRotation = entry.transform.rotation;
@@ -290,6 +343,28 @@ public static class DataHandler
             foreach (MapLightEntry entry in group.lights)
             {
                 UnityEngine.GameObject obj = new UnityEngine.GameObject("LIGHT_" + entry.id + "_" + entry.layerId);
+
+                // anim scripts
+                foreach (var mapScriptId in entry.animScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimScriptNames[mapScriptId] + "\n");
+                }
+
+                foreach (var mapScriptId in entry.animTransformScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimTransformScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimTransformScriptNames[mapScriptId] + "\n");
+                }
+
+                foreach (var mapScriptId in entry.animDoorScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimDoorScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimDoorScriptNames[mapScriptId] + "\n");
+                }
 
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
                 obj.GetComponent<Transform>().localPosition = entry.transform.translation;
@@ -368,6 +443,27 @@ public static class DataHandler
 
                     // anim scripts
                     foreach (var mapScriptId in entry.animScriptIds)
+                    {
+                        var comp = Type.GetType(_mapAnimScriptNames[mapScriptId]);
+                        obj.AddComponent(comp);
+                        Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimScriptNames[mapScriptId] + "\n");
+                    }
+
+                    foreach (var mapScriptId in entry.animTransformScriptIds)
+                    {
+                        var comp = Type.GetType(_mapAnimTransformScriptNames[mapScriptId]);
+                        obj.AddComponent(comp);
+                        Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimTransformScriptNames[mapScriptId] + "\n");
+                    }
+
+                    foreach (var mapScriptId in entry.animDoorScriptIds)
+                    {
+                        var comp = Type.GetType(_mapAnimDoorScriptNames[mapScriptId]);
+                        obj.AddComponent(comp);
+                        Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimDoorScriptNames[mapScriptId] + "\n");
+                    }
+                    // anim scripts
+                    foreach (var mapScriptId in entry.animScriptIds)
                         obj.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
 
                     //GameObject obj = new GameObject();
@@ -417,6 +513,19 @@ public static class DataHandler
                 foreach (var mapScriptId in entry.animScriptIds)
                     obj.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
 
+                foreach (var mapScriptId in entry.animTransformScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimTransformScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimTransformScriptNames[mapScriptId] + "\n");
+                }
+
+                foreach (var mapScriptId in entry.animDoorScriptIds)
+                {
+                    var comp = Type.GetType(_mapAnimDoorScriptNames[mapScriptId]);
+                    obj.AddComponent(comp);
+                    Debug.LogFormat("========Entry: " + entry.id + "Script: " + _mapAnimDoorScriptNames[mapScriptId] + "\n");
+                }
                 obj.GetComponent<Transform>().SetParent(groupRootObject.GetComponent<Transform>());
                 obj.GetComponent<Transform>().localPosition = entry.transform.translation;
                 obj.GetComponent<Transform>().localRotation = entry.transform.rotation;

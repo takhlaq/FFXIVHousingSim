@@ -977,6 +977,7 @@ namespace FFXIVHSLauncher
                     mg.AddEntry(ml);
 
 
+                    var gimId = light.Header.UnknownId;
                     // add anim scripts
                     foreach (var animScript in animList)
                         if (animScript.targetSgbEntryIndex == light.Header.UnknownId)
@@ -984,6 +985,9 @@ namespace FFXIVHSLauncher
                     foreach (var animScript in animTransformList)
                         if (animScript.targetSgMemberIndexes.Contains(light.Header.UnknownId))
                             ml.animTransformScriptIds.Add(animScript.id);
+                    foreach (var s in animDoorList)
+                        if (s.targetDoor1Idx == gimId || s.targetDoor2Idx == gimId || s.targetDoor3Idx == gimId || s.targetDoor4Idx == gimId)
+                            ml.animDoorScriptIds.Add(s.id);
                 }
 
                 foreach (var se in sgbGroup.Entries.OfType<SgbSoundEntry>())
