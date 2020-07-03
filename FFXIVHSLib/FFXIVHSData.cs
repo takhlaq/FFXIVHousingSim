@@ -220,6 +220,7 @@ namespace FFXIVHSLib
 
         public Dictionary<int, MapAnimTransformScriptEntry> animTransformScripts { get; set; }
 
+        public Dictionary<int, MapAnimDoorScriptEntry> animDoorScripts { get; set; }
         public Dictionary<int, MapMovePathScriptEntry> movePathScripts { get; set; }
 
         public Map()
@@ -230,6 +231,7 @@ namespace FFXIVHSLib
             this.sounds = new Dictionary<int, MapSoundEntry>();
             this.animScripts = new Dictionary<int, MapAnimScriptEntry>();
             this.animTransformScripts = new Dictionary<int, MapAnimTransformScriptEntry>();
+            this.animDoorScripts = new Dictionary<int, MapAnimDoorScriptEntry>();
             this.movePathScripts = new Dictionary<int, MapMovePathScriptEntry>();
         }
 
@@ -353,6 +355,22 @@ namespace FFXIVHSLib
             return id;
         }
 
+        public int TryAddUniqueAnimDoorScript(MapAnimDoorScriptEntry se)
+        {
+            if (this.animDoorScripts == null)
+                this.animDoorScripts = new Dictionary<int, MapAnimDoorScriptEntry>();
+
+            var res = animDoorScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
+
+            if (res.Count() == -1)
+                return res.Single().Key;
+
+            int id = this.animDoorScripts.Count;
+            se.id = id;
+            this.animDoorScripts.Add(id, se);
+            return id;
+        }
+
         public int TryAddUniqueMovePathScript(MapMovePathScriptEntry se)
         {
             if (this.movePathScripts == null)
@@ -388,7 +406,8 @@ namespace FFXIVHSLib
         public List<MapVfxEntry> vfx;
         public List<MapSoundEntry> sounds;
         public List<int> animScriptRefs;
-        public List<int> animTransformScriptrefs;
+        public List<int> animTransformScriptRefs;
+        public List<int> animDoorScriptRefs;
         public List<int> movePathScriptRefs;
 
         public MapGroup()
@@ -450,9 +469,16 @@ namespace FFXIVHSLib
 
         public void AddEntry(MapAnimTransformScriptEntry mse)
         {
-            if (animTransformScriptrefs == null)
-                animTransformScriptrefs = new List<int>();
-            animTransformScriptrefs.Add(mse.id);
+            if (animTransformScriptRefs == null)
+                animTransformScriptRefs = new List<int>();
+            animTransformScriptRefs.Add(mse.id);
+        }
+
+        public void AddEntry(MapAnimDoorScriptEntry mse)
+        {
+            if (animDoorScriptRefs == null)
+                animDoorScriptRefs = new List<int>();
+            animDoorScriptRefs.Add(mse.id);
         }
 
         public void AddEntry(MapMovePathScriptEntry mse)
@@ -472,14 +498,15 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public int modelId { get; set; }
         public List<int> animScriptIds { get; set; }
-
         public List<int> animTransformScriptIds { get; set; }
+        public List<int> animDoorScriptIds { get; set; }
         public Transform transform { get; set; }
 
         public MapModelEntry()
         {
             this.animScriptIds = new List<int>();
             this.animTransformScriptIds = new List<int>();
+            this.animDoorScriptIds = new List<int>();
         }
     }
 
@@ -507,8 +534,8 @@ namespace FFXIVHSLib
         public int layerId { get; set; }
         public List<int> modelIds { get; set; }
         public List<int> animScriptIds { get; set; }
-
         public List<int> animTransformScriptIds { get; set; }
+        public List<int> animDoorScriptIds { get; set; }
         public Transform transform { get; set; }
         public string avfxPath { get; set; }
         public string modelPath { get; set; }
@@ -531,6 +558,7 @@ namespace FFXIVHSLib
             modelIds = new List<int>();
             animScriptIds = new List<int>();
             animTransformScriptIds = new List<int>();
+            animDoorScriptIds = new List<int>();
         }
     }
 
@@ -539,6 +567,10 @@ namespace FFXIVHSLib
         public int id { get; set; }
         public int layerId { get; set; }
         public Transform transform { get; set; }
+
+        public List<int> animScriptIds { get; set; }
+        public List<int> animTransformScriptIds { get; set; }
+        public List<int> animDoorScriptIds { get; set; }
 
         public string lightType{ get; set; }
         public float attenuation{ get; set; }
@@ -566,6 +598,9 @@ namespace FFXIVHSLib
         {
             transform = new Transform();
             color = new MapColor();
+            animScriptIds = new List<int>();
+            animTransformScriptIds = new List<int>();
+            animDoorScriptIds = new List<int>();
         }
 
         public override bool Equals(object l)
@@ -586,14 +621,16 @@ namespace FFXIVHSLib
         public string fileName { get; set; }
 
         public List<int> animScriptIds { get; set; }
-
         public List<int> animTransformScriptIds { get; set; }
+        public List<int> animDoorScriptIds { get; set; }
 
         public Transform transform { get; set; }
 
         public MapSoundEntry()
         {
             this.animScriptIds = new List<int>();
+            this.animTransformScriptIds = new List<int>();
+            this.animDoorScriptIds = new List<int>();
         }
 
         public override bool Equals(object l)
@@ -632,6 +669,21 @@ namespace FFXIVHSLib
         CurveSpline = 0x1,
         CurveAcceleration = 0x2,
         CurveDeceleration = 0x3,
+    };
+
+    public enum MapAnimDoorCurveType
+    {
+        Spline = 0x1,
+        Linear = 0x2,
+        Acceleration = 0x3,
+        Deceleration = 0x4,
+    };
+
+    public enum MapAnimDoorOpenStyle
+    {
+        Rotation_0 = 0x0,
+        HorizontalSlide = 0x1,
+        VerticalSlide = 0x2,
     };
 
     public enum MapAnimTransformMovementType
@@ -750,6 +802,40 @@ namespace FFXIVHSLib
                 return m.id == id && m.animIndex == animIndex && m.targetSgMemberIndexes.Count == targetSgMemberIndexes.Count && m.parentSgbPath == parentSgbPath && m.loop == loop &&
                     m.translation == translation && m.rotation == rotation && m.scale == scale && m.offset == offset && m.randomRate == randomRate && m.time == time && m.startEndTime == startEndTime &&
                     m.curveType == curveType && m.movementType == movementType && m.enabled == enabled;
+            }
+            return false;
+        }
+    }
+
+    public class MapAnimDoorScriptEntry
+    {
+        public int id { get; set; }
+        public int animIndex { get; set; }
+        public byte targetDoor1Idx { get; set; }
+        public int targetDoor2Idx { get; set; }
+        public int targetDoor3Idx { get; set; }
+        public int targetDoor4Idx { get; set; }
+        public MapAnimDoorOpenStyle openStyle { get; set; }
+        public float timeLength { get; set; }
+        public float openAngle { get; set; }
+        public float openDistance { get; set; }
+        public byte targetSoundOpeningIdx { get; set; }
+        public byte targetSoundClosingIdx { get; set; }
+        public MapAnimDoorCurveType curveType { get; set; }
+        public MapAnimRotationAxis rotationAxis { get; set; }
+
+        public string name { get; set; }
+        public string scriptFileName { get; set; }
+        public string parentSgbPath { get; set; }
+
+        public override bool Equals(object l)
+        {
+            if (l is  MapAnimDoorScriptEntry)
+            {
+                MapAnimDoorScriptEntry m = (MapAnimDoorScriptEntry)l;
+                return m.id == id && m.animIndex == animIndex && m.targetDoor1Idx == targetDoor1Idx && m.targetDoor2Idx == targetDoor2Idx && m.targetDoor3Idx == targetDoor3Idx &&
+                    m.targetDoor4Idx == targetDoor4Idx && m.openStyle == openStyle && m.timeLength == timeLength && m.openAngle == openAngle && m.openDistance == openDistance && 
+                    m.targetSoundOpeningIdx == targetSoundOpeningIdx && m.targetSoundClosingIdx == targetSoundClosingIdx && m.curveType == curveType && m.rotationAxis == rotationAxis;
             }
             return false;
         }

@@ -73,5 +73,27 @@ namespace FFXIVHSLauncher
 
             File.WriteAllText(path, outStr);
         }
+
+        public static void WriteScriptFile(String path, FFXIVHSLib.MapAnimTransformScriptEntry entry)
+        {
+            string outStr = "using System.Collections;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n";
+            outStr += "public class " + entry.name + " : MonoBehaviour {\n";
+            outStr += "\n\n";
+
+            outStr += "\n}\n";
+
+            File.WriteAllText(path, outStr);
+        }
+
+        public static void WriteScriptFile(String path, FFXIVHSLib.MapAnimDoorScriptEntry entry)
+        {
+            string outStr = "using System.Collections;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n";
+            outStr += "public class " + entry.name + " : MonoBehaviour {\n";
+            outStr += "\n\n";
+
+            outStr += "\n}\n";
+
+            File.WriteAllText(path, outStr);
+        }
     }
 }

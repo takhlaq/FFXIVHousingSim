@@ -391,6 +391,30 @@ namespace FFXIVHSLauncher
             return mst;
         }
 
+        public static MapAnimDoorScriptEntry ToMapAnimDoorScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimDoor s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        {
+            MapAnimDoorScriptEntry msd = new MapAnimDoorScriptEntry();
+            msd.animIndex = animIndex;
+            msd.parentSgbPath = parent.File.Path;
+            msd.targetDoor1Idx = s.DoorInstanceID1;
+            msd.targetDoor2Idx = s.DoorInstanceID2;
+            msd.targetDoor3Idx = s.DoorInstanceID3;
+            msd.targetDoor4Idx = s.DoorInstanceID4;
+            msd.targetSoundOpeningIdx = s.SoundAtOpening;
+            msd.targetSoundClosingIdx = s.SoundAtClosing;
+            msd.rotationAxis = (MapAnimRotationAxis)s.RotationAxis;
+            msd.openAngle = s.OpenAngle;
+            msd.openDistance = s.OpenDistance;
+            msd.timeLength = s.TimeLength;
+            msd.curveType = (MapAnimDoorCurveType)s.CurveType;
+            msd.openStyle = (MapAnimDoorOpenStyle)s.OpenStyle;
+
+
+            msd.name = "DOOR_" + Path.GetFileNameWithoutExtension(msd.parentSgbPath) + "_" + msd.animIndex;
+            msd.scriptFileName = msd.name + ".cs";
+            return msd;
+        }
+
         public static Quaternion ExtractRotationQuaternion(this Matrix m)
         {
             SharpDX.Quaternion dxRot = SharpDX.Quaternion.RotationMatrix(m);

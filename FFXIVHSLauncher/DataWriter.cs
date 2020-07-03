@@ -852,6 +852,13 @@ namespace FFXIVHSLauncher
                         mgToApplyRots.AddEntry(animScript);
                 }
             }
+
+            var animDoorList = m.animDoorScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
+            foreach (var animScript in animDoorList)
+                if (animScript.targetDoor1Idx == mgGimmickId || animScript.targetDoor2Idx == mgGimmickId ||
+                    animScript.targetDoor3Idx == mgGimmickId || animScript.targetDoor4Idx == mgGimmickId ||
+                    animScript.targetSoundOpeningIdx == mgGimmickId || animScript.targetSoundClosingIdx == mgGimmickId)
+                    mgToApplyRots.AddEntry(animScript);
         }
 
         private static void AddAnimationsToMapGroup(ref Map m, SgbFile parent, ref MapGroup mgToApplyRots, uint mgGimmickId)
@@ -866,6 +873,14 @@ namespace FFXIVHSLauncher
             var animTransformList = m.animTransformScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
             foreach (var animScript in animTransformList)
                 if (animScript.targetSgMemberIndexes.Contains(mgGimmickId))
+                    mgToApplyRots.AddEntry(animScript);
+
+            // add door things
+            var animDoorList = m.animDoorScripts.Values.Where(_ => _.parentSgbPath == parent.File.Path);
+            foreach (var animScript in animDoorList)
+                if (animScript.targetDoor1Idx == mgGimmickId || animScript.targetDoor2Idx == mgGimmickId ||
+                    animScript.targetDoor3Idx == mgGimmickId || animScript.targetDoor4Idx == mgGimmickId ||
+                    animScript.targetSoundOpeningIdx == mgGimmickId || animScript.targetSoundClosingIdx == mgGimmickId)
                     mgToApplyRots.AddEntry(animScript);
         }
 
@@ -894,8 +909,17 @@ namespace FFXIVHSLauncher
                 int animId = map.TryAddUniqueAnimTransformScript(mAnim);
             }
 
+            for (int i = 0; i < file.SGSettings.Doors.Count; ++i)
+            {
+                var anim = file.SGSettings.Doors[i];
+
+                MapAnimDoorScriptEntry mAnim = anim.ToMapAnimDoorScriptEntry(file, i);
+                int animId = map.TryAddUniqueAnimDoorScript(mAnim);
+            }
+
             var animList = map.animScripts.Values.Where(_ => _.parentSgbPath == file.File.Path);
             var animTransformList = map.animTransformScripts.Values.Where(_ => _.parentSgbPath == file.File.Path);
+            var animDoorList = map.animDoorScripts.Values.Where(_ => _.parentSgbPath == file.File.Path);
 
             foreach (var sgbGroup in file.Data.OfType<SgbGroup>())
             {
@@ -908,6 +932,7 @@ namespace FFXIVHSLauncher
                     var mMdlE = mdl.Model.ToMapModelEntry(modelId);
                     mg.AddEntry(mMdlE);
 
+                    var gimId = mdl.Header.GimmickId;
                     // add anim scripts
                     foreach (var animScript in animList)
                         if (animScript.targetSgbEntryIndex == mdl.Header.GimmickId)
@@ -916,6 +941,9 @@ namespace FFXIVHSLauncher
                     foreach (var animScript in animTransformList)
                         if (animScript.targetSgMemberIndexes.Contains(mdl.Header.GimmickId))
                             mMdlE.animTransformScriptIds.Add(animScript.id);
+                    foreach (var s in animDoorList)
+                        if (s.targetDoor1Idx == gimId || s.targetDoor2Idx == gimId || s.targetDoor3Idx == gimId || s.targetDoor4Idx == gimId)
+                            mMdlE.animDoorScriptIds.Add(s.id);
                 }
 
                 foreach (var vfx in sgbGroup.Entries.OfType<SgbVfxEntry>())
@@ -947,6 +975,15 @@ namespace FFXIVHSLauncher
                     var ml = light.ToMapLightEntry();
                     int lightId = map.TryAddUniqueLight(ml);
                     mg.AddEntry(ml);
+
+
+                    // add anim scripts
+                    foreach (var animScript in animList)
+                        if (animScript.targetSgbEntryIndex == light.Header.UnknownId)
+                            ml.animScriptIds.Add(animScript.id);
+                    foreach (var animScript in animTransformList)
+                        if (animScript.targetSgMemberIndexes.Contains(light.Header.UnknownId))
+                            ml.animTransformScriptIds.Add(animScript.id);
                 }
 
                 foreach (var se in sgbGroup.Entries.OfType<SgbSoundEntry>())
@@ -967,8 +1004,16 @@ namespace FFXIVHSLauncher
                     {
                         var sgId = se.Header.UnknownId;
                         if (animScript.targetSgMemberIndexes.Contains(sgId))
-                            ms.animScriptIds.Add(animScript.id);
+                            ms.animTransformScriptIds.Add(animScript.id);
                     }
+
+                    foreach (var animScript in animDoorList)
+                    {
+                        var sgId = se.Header.UnknownId;
+                        if (animScript.targetSoundOpeningIdx == sgId || animScript.targetSoundOpeningIdx == sgId)
+                            ms.animDoorScriptIds.Add(animScript.id);
+                    }
+
                     mg.AddEntry(ms);
                 }
 
@@ -1142,6 +1187,24 @@ namespace FFXIVHSLauncher
             if (map.animScripts != null)
             {
                 foreach (MapAnimScriptEntry entry in map.animScripts.Values)
+                {
+                    var path = Path.Combine(outpath, entry.scriptFileName);
+                    ScriptFileWriter.WriteScriptFile(path, entry);
+                }
+            }
+
+            if (map.animTransformScripts != null)
+            {
+                foreach (MapAnimTransformScriptEntry entry in map.animTransformScripts.Values)
+                {
+                    var path = Path.Combine(outpath, entry.scriptFileName);
+                    ScriptFileWriter.WriteScriptFile(path, entry);   
+                }
+            }
+
+            if (map.animDoorScripts != null)
+            {
+                foreach (MapAnimDoorScriptEntry entry in map.animDoorScripts.Values)
                 {
                     var path = Path.Combine(outpath, entry.scriptFileName);
                     ScriptFileWriter.WriteScriptFile(path, entry);
