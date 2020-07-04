@@ -346,7 +346,7 @@ namespace FFXIVHSLib
 
             var res = animTransformScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
 
-            if (res.Count() == -1)
+            if (res.Count() == 1)
                 return res.Single().Key;
 
             int id = this.animTransformScripts.Count;
@@ -362,7 +362,7 @@ namespace FFXIVHSLib
 
             var res = animDoorScripts.Where(_ => _.Value.Equals(se)).Select(_ => _);
 
-            if (res.Count() == -1)
+            if (res.Count() == 1)
                 return res.Single().Key;
 
             int id = this.animDoorScripts.Count;
@@ -759,9 +759,7 @@ namespace FFXIVHSLib
             if (l is MapAnimScriptEntry)
             {
                 MapAnimScriptEntry m = (MapAnimScriptEntry)l;
-                return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath && m.targetSgbEntryIndex == targetSgbEntryIndex &&
-                    m.axis == axis && m.fullRotationTime == fullRotationTime && m.delay == delay && m.targetSgbEntryIndex == targetSgbEntryIndex && m.targetSgbVfx2Id == targetSgbVfx2Id &&
-                    m.targetSgbSoundStartId == targetSgbSoundStartId && m.targetSgbSoundMidId == targetSgbSoundMidId && m.targetSgbSoundEndId == m.targetSgbSoundEndId;
+                return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath;
             }
             return false;
         }
@@ -799,9 +797,7 @@ namespace FFXIVHSLib
             if (l is MapAnimTransformScriptEntry)
             {
                 MapAnimTransformScriptEntry m = (MapAnimTransformScriptEntry)l;
-                return m.id == id && m.animIndex == animIndex && m.targetSgMemberIndexes.Count == targetSgMemberIndexes.Count && m.parentSgbPath == parentSgbPath && m.loop == loop &&
-                    m.translation == translation && m.rotation == rotation && m.scale == scale && m.offset == offset && m.randomRate == randomRate && m.time == time && m.startEndTime == startEndTime &&
-                    m.curveType == curveType && m.movementType == movementType && m.enabled == enabled;
+                return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath;
             }
             return false;
         }
@@ -833,9 +829,7 @@ namespace FFXIVHSLib
             if (l is  MapAnimDoorScriptEntry)
             {
                 MapAnimDoorScriptEntry m = (MapAnimDoorScriptEntry)l;
-                return m.id == id && m.animIndex == animIndex && m.targetDoor1Idx == targetDoor1Idx && m.targetDoor2Idx == targetDoor2Idx && m.targetDoor3Idx == targetDoor3Idx &&
-                    m.targetDoor4Idx == targetDoor4Idx && m.openStyle == openStyle && m.timeLength == timeLength && m.openAngle == openAngle && m.openDistance == openDistance && 
-                    m.targetSoundOpeningIdx == targetSoundOpeningIdx && m.targetSoundClosingIdx == targetSoundClosingIdx && m.curveType == curveType && m.rotationAxis == rotationAxis;
+                return m.animIndex == animIndex && m.parentSgbPath == parentSgbPath;
             }
             return false;
         }
