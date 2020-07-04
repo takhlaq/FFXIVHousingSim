@@ -79,7 +79,12 @@ namespace FFXIVHSLauncher
             string outStr = "using System.Collections;\nusing System.Collections.Generic;\nusing UnityEngine;\n\n";
             outStr += "public class " + entry.name + " : MonoBehaviour {\n";
             outStr += "\n\n";
+            outStr += "\tvoid Start(){}\n\n";
+            outStr += "\tvoid Update() {\n";
 
+
+
+            outStr += "\n\t}";
             outStr += "\n}\n";
 
             File.WriteAllText(path, outStr);
