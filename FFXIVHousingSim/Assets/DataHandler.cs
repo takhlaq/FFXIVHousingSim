@@ -284,6 +284,9 @@ public static class DataHandler
         if (group.movePathScriptRefs != null)
             foreach (var mapScriptId in group.movePathScriptRefs)
                 groupRootObject.AddComponent(Type.GetType(_mapMovePathScriptNames[mapScriptId]));
+        if (group.animTransformScriptRefs != null)
+            foreach (var mapScriptId in group.animTransformScriptRefs)
+                groupRootObject.AddComponent(Type.GetType(_mapAnimTransformScriptNames[mapScriptId]));
 
         if (parent == null)
 		{

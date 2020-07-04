@@ -1068,5 +1068,10 @@ namespace FFXIVHSLauncher
         {
 
         }
+
+        private void TextureFormatBtn_Checked(object sender, RoutedEventArgs e)
+        {
+            ObjectFileWriter.ExportPng = TextureFormatBtn.IsChecked.Value;
+        }
     }
 }

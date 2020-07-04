@@ -328,19 +328,23 @@ public class MaterialHandler
 		Color32[] alphaCheck = texture.GetPixels32();
 
         bool hasAlpha = false;
-        if (texPath.Contains("_s."))
+        //if (texPath.Contains("_s."))
         {
-            foreach (Color32 c in alphaCheck)
-            {
-                if (c.a != 0xFF)
-                {
-                    hasAlpha = true;
-                    break;
-                }
-            }
-            //if (hasAlpha)
-            {
-                foreach (Color32 c in alphaCheck)
+			if (texPath.Contains("_a.") || texPath.Contains("_s."))
+			{
+				foreach (Color32 c in alphaCheck)
+				{
+					if (c.a != 0xFF)
+					{
+						hasAlpha = true;
+						break;
+					}
+				}
+			}
+			//if (hasAlpha)
+			if (texPath.Contains("_s."))
+			{
+				foreach (Color32 c in alphaCheck)
                 {
                     if ((c.r == 255 && c.g == 95 && c.b == 65) || (c.r > 100 && c.a != 0xFF))
                     {

@@ -27,12 +27,11 @@
         <Button Content="TerritoryInfo JSON" HorizontalAlignment="Left" Margin="696,172,0,0" VerticalAlignment="Top" Width="113" Click="JsonWriteButton_Click"/>
         <Button Content="Resolve SGBs in Box" x:Name="ResolveBoxSgbs" HorizontalAlignment="Left" Margin="696,290,0,0" VerticalAlignment="Top" Width="113" Height="22" IsCancel="True" Click="ResolveBoxSgbs_Click">
         </Button>
-        <Button x:Name="ExteriorHousingJsonBtn" Content="Ext Housing JSON" HorizontalAlignment="Left" Margin="696,196,0,0" VerticalAlignment="Top" Width="113" Height="19" Click="ExteriorHousingJsonBtn_Click"/>
-        <Button x:Name="BlueprintButton" Content="Blueprints JSON" HorizontalAlignment="Left" Margin="696,220,0,0" VerticalAlignment="Top" Width="113" Click="BlueprintButton_Click"/>
         <Button x:Name="ExtractMapBtn" Content="Extract Map JSON" HorizontalAlignment="Left" Margin="696,148,0,0" VerticalAlignment="Top" Width="113" Click="ExtractMapBtn_Click"/>
         <Label x:Name="SelectedTeriLabel" Content="Selected:" HorizontalAlignment="Left" Margin="583,10,0,0" VerticalAlignment="Top"/>
         <Label Content="Search" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="696,359,0,0"/>
         <Label Content="Load Dat Path" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="696,379,0,0"/>
+        <CheckBox x:Name="TextureFormatBtn" Content="png textures" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="696,197,0,0" Checked="TextureFormatBtn_Checked"/>
 
 
     </Grid>

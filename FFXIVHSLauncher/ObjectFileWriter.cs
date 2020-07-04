@@ -8,7 +8,7 @@ namespace FFXIVHSLauncher
     public static class ObjectFileWriter
     {
         private static bool debug = true;
-
+        public static bool ExportPng = false;
         public static void WriteObjectFile(String path, ModelFile mdlFile)
         {
             try
@@ -182,10 +182,12 @@ namespace FFXIVHSLauncher
 
             //texcoords
             sw.WriteLine("#texcoords");
-            foreach (Vector4 texCoord in vtList)
-            {
-                sw.WriteLine("vt {0} {1} {2} {3}", (decimal)texCoord.X, -1 * (decimal)texCoord.Y, (decimal)texCoord.W, -1 * (decimal)texCoord.Z);
-            }
+            if (!ExportPng)
+                foreach (Vector4 texCoord in vtList)
+                    sw.WriteLine("vt {0} {1} {2} {3}", (decimal)texCoord.X, (decimal)texCoord.Y, (decimal)texCoord.W, (decimal)texCoord.Z);
+            else
+                foreach (Vector4 texCoord in vtList)
+                    sw.WriteLine("vt {0} {1} {2} {3}", (decimal)texCoord.X, (decimal)texCoord.Y, (decimal)texCoord.W, (decimal)texCoord.Z);
             
             sw.WriteLine();
 
@@ -208,7 +210,7 @@ namespace FFXIVHSLauncher
         {
             if (File.Exists(mtlPath))
                 return;
-            
+
             String mtlFolder = mtlPath.Substring(0, mtlPath.LastIndexOf(@"\") + 1);
 
             if (!Directory.Exists(mtlFolder))
@@ -225,21 +227,24 @@ namespace FFXIVHSLauncher
                 foreach (var t in textures)
                     texturePaths.Add(t.Path);
             }
+
+            string ext = ExportPng ? ".png" : ".dds";
+
             for (var i = 0; i < textures.Length; ++i)
             {
                 var img = textures[i];
                 String imgName = texturePaths[i];
                 int imgLastSep = imgName.LastIndexOf('/');
                 imgName = imgName.Substring(imgLastSep + 1);
-                imgName = imgName.Replace(".atex", "_d.dds").Replace(".tex", ".dds");
+                imgName = imgName.Replace(".atex", "_d.dds").Replace(".tex", ext);
 
                 try
                 {
                     //Write the image out
                     if (!File.Exists(mtlFolder + imgName))
                     {
-                        var ddsBytes = SaintCoinach.Imaging.ImageConverter.GetDDS(img);
-                        if (ddsBytes != null)
+                        byte[] ddsBytes = null;
+                        if (!ExportPng && (ddsBytes = SaintCoinach.Imaging.ImageConverter.GetDDS(img)) != null)
                         {
                             System.IO.File.WriteAllBytes(mtlFolder + imgName, ddsBytes);
                         }
