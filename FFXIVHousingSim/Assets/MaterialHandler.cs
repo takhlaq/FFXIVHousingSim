@@ -2,12 +2,75 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using UnityEngine;
  using UnityEngine.UI;
 
 //TODO write this like fastobjimporter eventually to see if it will increase speed
 public class MaterialHandler
 {
+	struct DDS_PIXELFORMAT
+	{
+		public uint dwSize;
+		public uint dwFlags;
+		public uint dwFourCC;
+		public uint dwRGBBitCount;
+		public uint dwRBitMask;
+		public uint dwGBitMask;
+		public uint dwBBitMask;
+		public uint dwABitMask;
+	};
+
+	struct DDS_HEADER
+	{
+		public uint dwMagic;
+		public uint dwSize;
+		public uint dwFlags;
+		public uint dwHeight;
+		public uint dwWidth;
+		public uint dwPitchOrLinearSize;
+		public uint dwDepth;
+		public uint dwMipMapCount;
+		public uint dwReserved0;
+		public uint dwReserved1;
+		public uint dwReserved2;
+		public uint dwReserved3;
+		public uint dwReserved4;
+		public uint dwReserved5;
+		public uint dwReserved6;
+		public uint dwReserved7;
+		public uint dwReserved8;
+		public uint dwReserved19;
+		public uint dwReserved10;
+
+		public DDS_PIXELFORMAT ddspf;
+		public uint dwCaps;
+		public uint dwCaps2;
+		public uint dwCaps3;
+		public uint dwCaps4;
+		public uint dwReserved11;
+	};
+
+	enum DDSD_ENUM : uint
+	{
+		DDSD_CAPS = 0x1,//Required in every.dds file. 	
+		DDSD_HEIGHT = 0x2,//Required in every.dds file.
+		DDSD_WIDTH = 0x4,//Required in every.dds file.
+		DDSD_PITCH = 0x8,//Required when pitch is provided for an uncompressed texture.
+		DDSD_PIXELFORMAT = 0x1000,//Required in every.dds file.
+		DDSD_MIPMAPCOUNT = 0x20000,//Required in a mipmapped texture.
+		DDSD_LINEARSIZE = 0x80000,//Required when pitch is provided for a compressed texture.
+		DDSD_DEPTH = 0x800000,//Required in a depth texture
+	}
+
+	enum DDPF_ENUM : uint
+	{
+		DDPF_ALPHAPIXELS = 0x1, // Texture contains alpha data; dwRGBAlphaBitMask contains valid data.
+		DDPF_ALPHA = 0x2, // Used in some older DDS files for alpha channel only uncompressed data (dwRGBBitCount contains the alpha channel bitcount; dwABitMask contains valid data)
+		DDPF_FOURCC = 0x4, // Texture contains compressed RGB data; dwFourCC contains valid data.
+		DDPF_RGB = 0x40, // Texture contains uncompressed RGB data; dwRGBBitCountand the RGB masks(dwRBitMask, dwGBitMask, dwBBitMask) contain valid data.
+	}
+
 	//Whether or not to actually load textures, or just use default material
 	private bool DebugLoadFiles = true;
 	
@@ -258,15 +321,29 @@ public class MaterialHandler
 		tex.Apply();
 	}
 
-    public static Texture2D LoadTextureDXT(byte[] ddsBytes)
+	// https://stackoverflow.com/a/2887
+	public static T ByteArrayToStructure<T>(byte[] bytes) where T : struct
+	{
+		T stuff;
+		GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+		try
+		{
+			stuff = (T)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(T));
+		}
+		finally
+		{
+			handle.Free();
+		}
+		return stuff;
+	}
+	
+	public static Texture2D LoadTextureDXT(byte[] ddsBytes)
     {
         TextureFormat textureFormat;
         byte ddsSizeCheck = ddsBytes[4];
         if (ddsSizeCheck != 124)
             throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
 
-        int height = ddsBytes[13] * 256 + ddsBytes[12];
-        int width = ddsBytes[17] * 256 + ddsBytes[16];
 
         if (ddsBytes[0x57] == '1')
             textureFormat = TextureFormat.DXT1;
@@ -274,13 +351,18 @@ public class MaterialHandler
             textureFormat = TextureFormat.DXT5;
 
         int DDS_HEADER_SIZE = 128;
-        byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+
+		DDS_HEADER header = ByteArrayToStructure<DDS_HEADER>(ddsBytes);
+
+		int height = (int)header.dwHeight;
+		int width = (int)header.dwWidth;
+		Texture2D texture = new Texture2D(width, height, textureFormat, true);
+
+		byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
         Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
 
-        Texture2D texture = new Texture2D(width, height, textureFormat, false);
-        texture.LoadRawTextureData(dxtBytes);
-        texture.Apply();
-
+		texture.LoadRawTextureData(dxtBytes);
+		texture.Apply(true);
         return (texture);
     }
 
@@ -301,7 +383,7 @@ public class MaterialHandler
         }
 		if (DebugLoadFiles && !texPath.Contains("dummy"))
 			texture.LoadImage(File.ReadAllBytes(texPath));
- 
+
 		//texture.alphaIsTransparency = true;
  
 		return texture;
