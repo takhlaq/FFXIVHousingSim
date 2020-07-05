@@ -75,7 +75,7 @@ public class MaterialHandler
 	private bool DebugLoadFiles = true;
 	
 	//This turns every shader into the shader specified by sh if true.
-	private static bool shOverride = true;
+	private static bool shOverride = false;
 	private static Shader sh = Shader.Find("Silent/FF14 World NonBlend");
 	
 	//TODO: Refactor to use model ids at some point if needed
@@ -211,8 +211,10 @@ public class MaterialHandler
 
                             if (tex != null && tex.alphaIsTransparency)
                             {
-                                thisMaterial.EnableKeyword("_EmissionPow");
-                                thisMaterial.SetFloat("_EmissionPow", 2.25f);
+                                //thisMaterial.EnableKeyword("_EmissionPow");
+                                //thisMaterial.SetFloat("_EmissionPow", 2.25f);
+
+								thisMaterial.shader = cutout;
                             }
 
                             //tex.alphaIsTransparency = true;
@@ -240,7 +242,7 @@ public class MaterialHandler
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
-                            if (emissive)
+							if (emissive && tex.alphaIsTransparency)
                             {
                                 thisMaterial.EnableKeyword("_EmissionPow");
                                 thisMaterial.SetFloat("_EmissionPow", 2.25f);
@@ -399,24 +401,26 @@ public class MaterialHandler
      
 		texture = new Texture2D(1, 1);
 
-        if (texPath.Contains("dds"))
-        {
-            texture = LoadTextureDXT(File.ReadAllBytes(texPath));
-            texture.alphaIsTransparency = true;
-        }
-        else if (!texPath.Contains("dummy"))
+		if (texPath.Contains("dds"))
+		{
+			texture = LoadTextureDXT(File.ReadAllBytes(texPath));
+			texture.alphaIsTransparency = true;
+		}
+		else if (!texPath.Contains("dummy"))
+		{
+			texture = new Texture2D(1, 1, TextureFormat.ARGB32, true);
 			texture.LoadImage(File.ReadAllBytes(texPath));
-
+		}
 		Color32[] alphaCheck = texture.GetPixels32();
 
-        bool hasAlpha = false;
+        bool hasAlpha = texture.alphaIsTransparency;
         //if (texPath.Contains("_s."))
         {
-			if (texPath.Contains("_a.") || texPath.Contains("_s."))
+			//if (texPath.Contains("_a.") || texPath.Contains("_s."))
 			{
 				foreach (Color32 c in alphaCheck)
 				{
-					if (c.a != 0xFF)
+					if (c.a != 0xFF || c.a != 0x00)
 					{
 						hasAlpha = true;
 						break;
@@ -437,7 +441,7 @@ public class MaterialHandler
             }
         }
 		texture.alphaIsTransparency = hasAlpha;
-     
+		texture.Apply(true);
 		return texture;
 	}
 	

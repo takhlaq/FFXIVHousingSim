@@ -319,7 +319,7 @@ namespace FFXIVHSLauncher
             return mse;
         }
 
-        public static MapAnimScriptEntry ToMapAnimScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimRotation s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        public static MapAnimScriptEntry ToMapAnimScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGActionRotation s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
         {
             MapAnimScriptEntry mse = new MapAnimScriptEntry();
 
@@ -366,7 +366,7 @@ namespace FFXIVHSLauncher
             return mse;
         }
 
-        public static MapAnimTransformScriptEntry ToMapMoveAnimTransformScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimTransform2 s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        public static MapAnimTransformScriptEntry ToMapMoveAnimTransformScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGActionTransform2 s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
         {
             MapAnimTransformScriptEntry mst = new MapAnimTransformScriptEntry();
             
@@ -391,7 +391,7 @@ namespace FFXIVHSLauncher
             return mst;
         }
 
-        public static MapAnimDoorScriptEntry ToMapAnimDoorScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGAnimDoor s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
+        public static MapAnimDoorScriptEntry ToMapAnimDoorScriptEntry(this SaintCoinach.Graphics.Sgb.SGSettings.SGActionDoor s, SaintCoinach.Graphics.Sgb.SgbFile parent, int animIndex)
         {
             MapAnimDoorScriptEntry msd = new MapAnimDoorScriptEntry();
             msd.animIndex = animIndex;

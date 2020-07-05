@@ -766,7 +766,7 @@ namespace FFXIVHSLib
     }
 
     /// <summary>
-    /// Class representing SGAnimTransform2
+    /// Class representing SGActionTransform2
     /// </summary>
     public class MapAnimTransformScriptEntry
     {
@@ -848,6 +848,11 @@ namespace FFXIVHSLib
 
         public bool isEmissive { get; set; }
 
+        public MapModel()
+        {
+            isEmissive = false;
+        }
+
         public override bool Equals(object l)
         {
             if (l is MapModel)
@@ -855,7 +860,7 @@ namespace FFXIVHSLib
                 MapModel m = (MapModel) l;
                 return modelPath == m.modelPath &&
                        modelName == m.modelName &&
-                       numMeshes == m.numMeshes;
+                       numMeshes == m.numMeshes && isEmissive == m.isEmissive;
             }
             return false;
         }

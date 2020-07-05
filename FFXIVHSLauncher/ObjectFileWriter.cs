@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
+using System.Windows.Media.Imaging;
 using SaintCoinach.Graphics;
 
 namespace FFXIVHSLauncher
@@ -114,7 +118,7 @@ namespace FFXIVHSLauncher
                 vt.X = tv.UV.Value.X;
                 vt.Y = -1.0f * tv.UV.Value.Y;
                 vt.W = (tv.UV.Value.W == 0) ? vt.X : tv.UV.Value.W;
-                vt.Z = (tv.UV.Value.Z == 0) ? vt.Y : tv.UV.Value.Z;
+                vt.Z = (tv.UV.Value.Z == 0) ? vt.Y : (tv.UV.Value.Z * -1.0f);
            
                 nm.X = tv.Normal.Value.X;
                 nm.Y = tv.Normal.Value.Y;
@@ -219,15 +223,15 @@ namespace FFXIVHSLauncher
             List<String> matLines = new List<String>();
 
             matLines.Add("newmtl " + mtlFileName.Substring(0, mtlFileName.Length - 4));
-
             if (mat != null)
             {
                 textures = mat.TexturesFiles;
                 texturePaths = new List<string>();
                 foreach (var t in textures)
                     texturePaths.Add(t.Path);
-            }
 
+                matLines.Add("# shader: " + mat.Shader);
+            }
             string ext = ExportPng ? ".png" : ".dds";
 
             for (var i = 0; i < textures.Length; ++i)
@@ -251,32 +255,45 @@ namespace FFXIVHSLauncher
                         else
                         {
                             imgName = imgName.Replace(".dds", ".png");
-                            img.GetImage().Save(mtlFolder + imgName);
+                            //img.GetImage().Save(mtlFolder + imgName, System.Drawing.Imaging.ImageFormat.Png);
+                            using (MemoryStream ms = new MemoryStream())
+                            {
+                                
+                                img.GetImage().Save(ms, ImageFormat.Png);
+                                ms.Seek(0, SeekOrigin.Begin);
+
+                                PngBitmapEncoder enc = new PngBitmapEncoder();
+                                enc.Interlace = PngInterlaceOption.Off;
+                                enc.Frames.Add(BitmapFrame.Create(ms));
+
+                                using (FileStream ostream = new FileStream(mtlFolder + imgName, FileMode.Create))
+                                {
+                                    enc.Save(ostream);
+                                }
+                            }
                         }
                     }
                 }
                 catch (Exception e)
                 {
+                    System.Diagnostics.Debug.WriteLine("FUCKING SHIT TEXTURE " + imgName);
                     continue;
                 }
-                String imgSuffix = imgName.Substring(imgName.Length - 6);
+                String imgSuffix = imgName.Substring(imgName.LastIndexOf(".") - 2, 2);
 
                 switch (imgSuffix)
                 {
-                    case "_n.dds":
-                    case "_n.png":
+                    case "_n":
                         matLines.Add("bump " + imgName);
                         break;
-                    case "_s.dds":
-                    case "_s.png":
+                    case "_s":
                         matLines.Add("map_Ks " + imgName);
                         break;
-                    case "_d.dds":
-                    case "_d.png":
+                    case "_h":
+                    case "_d":
                         matLines.Add("map_Kd " + imgName);
                         break;
-                    case "_a.dds":
-                    case "_a.png":
+                    case "_a":
                         matLines.Add("map_Ka " + imgName);
                         break;
                     default:

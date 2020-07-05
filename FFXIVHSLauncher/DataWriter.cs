@@ -657,8 +657,13 @@ namespace FFXIVHSLauncher
                     
                     foreach (var mdl in lgbGroup.Entries.OfType<LgbModelEntry>())
                     {
-                        int modelId = map.TryAddUniqueModel(mdl.Model.Model.ToMapModel());
-                        lgbMapGroup.AddEntry(mdl.Model.ToMapModelEntry(modelId));
+                        var mMdl = mdl.Model.Model.ToMapModel();
+                        mMdl.isEmissive = mdl.IsEmissive;
+
+                        int modelId = map.TryAddUniqueModel(mMdl);
+
+                        var mMdlE = mdl.Model.ToMapModelEntry(modelId);
+                        lgbMapGroup.AddEntry(mMdlE);
                     }
 
                     foreach (var vfx in lgbGroup.Entries.OfType<LgbVfxEntry>())
