@@ -860,7 +860,7 @@ namespace FFXIVHSLib
                 MapModel m = (MapModel) l;
                 return modelPath == m.modelPath &&
                        modelName == m.modelName &&
-                       numMeshes == m.numMeshes && isEmissive == m.isEmissive;
+                       numMeshes == m.numMeshes && avfxFilePath == m.avfxFilePath && isEmissive == m.isEmissive;
             }
             return false;
         }

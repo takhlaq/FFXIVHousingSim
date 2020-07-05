@@ -242,10 +242,13 @@ public class MaterialHandler
 							else
 								tex = LoadTexture(Path.Combine(Directory.GetParent(materialPath).ToString(), splitLine[1].Trim()), out emissive);
 
-							if (emissive && tex.alphaIsTransparency)
+							if (emissive)
                             {
                                 thisMaterial.EnableKeyword("_EmissionPow");
                                 thisMaterial.SetFloat("_EmissionPow", 2.25f);
+
+								//thisMaterial.EnableKeyword("_ApplyVertexColouring");
+								//thisMaterial.SetFloat("_ApplyVertexColouring", 0.5f);
                             }
 							//tex.alphaIsTransparency = true;
 							if (tex != null && existingTexture == null)
@@ -401,7 +404,9 @@ public class MaterialHandler
      
 		texture = new Texture2D(1, 1);
 
-		if (texPath.Contains("dds"))
+		bool isDDS = texPath.Contains(".dds");
+
+		if (isDDS)
 		{
 			texture = LoadTextureDXT(File.ReadAllBytes(texPath));
 			texture.alphaIsTransparency = true;
@@ -411,16 +416,16 @@ public class MaterialHandler
 			texture = new Texture2D(1, 1, TextureFormat.ARGB32, true);
 			texture.LoadImage(File.ReadAllBytes(texPath));
 		}
-		Color32[] alphaCheck = texture.GetPixels32();
+		Color32[] pixels = texture.GetPixels32();
 
-        bool hasAlpha = texture.alphaIsTransparency;
+        bool hasAlpha = false;
         //if (texPath.Contains("_s."))
         {
-			//if (texPath.Contains("_a.") || texPath.Contains("_s."))
+			if (!texPath.Contains("_n."))
 			{
-				foreach (Color32 c in alphaCheck)
+				foreach (Color32 c in pixels)
 				{
-					if (c.a != 0xFF || c.a != 0x00)
+					if (c.a + c.r + c.b + c.g + c.b == 0)
 					{
 						hasAlpha = true;
 						break;
@@ -430,14 +435,32 @@ public class MaterialHandler
 			//if (hasAlpha)
 			if (texPath.Contains("_s."))
 			{
-				foreach (Color32 c in alphaCheck)
+				foreach (Color32 c in pixels)
                 {
-                    if ((c.r == 255 && c.g == 95 && c.b == 65) || (c.r > 100 && c.a != 0xFF))
+                    if ((c.r == 255 && c.g == 95 && c.b == 65) || (c.r > 100 && c.a != 0xFF && c.a != 0x00))
                     {
                         isEmissive = true;
                         break;
                     }
                 }
+            }
+			if (texPath.Contains("_n."))
+            {
+				texture.alphaIsTransparency = false;
+				for (int i = 0; i < pixels.Length; ++i)
+                {
+					Color32 c = pixels[i];
+					var tmpA = c.a;
+					var tmpR = c.r;
+					var tmpG = c.g;
+					var tmpB = c.b;
+
+					// GA to RG
+					c.g = tmpR;
+					c.a = tmpG;
+                }
+				texture.Apply(true);
+				return texture;
             }
         }
 		texture.alphaIsTransparency = hasAlpha;
