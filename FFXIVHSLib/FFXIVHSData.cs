@@ -566,6 +566,7 @@ namespace FFXIVHSLib
     {
         public int id { get; set; }
         public int layerId { get; set; }
+        public string parentFilePath { get; set; }
         public Transform transform { get; set; }
 
         public List<int> animScriptIds { get; set; }
@@ -608,7 +609,7 @@ namespace FFXIVHSLib
             if (l is MapLightEntry)
             {
                 MapLightEntry m = (MapLightEntry)l;
-                return transform == m.transform && lightType == m.lightType && color == m.color && colorIntensity == m.colorIntensity;
+                return m.parentFilePath == parentFilePath && m.layerId == layerId;
             }
             return false;
         }
@@ -625,6 +626,8 @@ namespace FFXIVHSLib
         public List<int> animDoorScriptIds { get; set; }
 
         public Transform transform { get; set; }
+
+        public uint layerId { get; set; }
 
         public MapSoundEntry()
         {
@@ -720,17 +723,14 @@ namespace FFXIVHSLib
         public float swingRotationSpeedRange0 { get; set; }
         public float swingRotationSpeedRange1 { get; set; }
 
+        public string parentFileName { get; set; }
+        public uint layerId { get; set; }
         public override bool Equals(object l)
         {
             if (l is MapMovePathScriptEntry)
             {
                 MapMovePathScriptEntry m = (MapMovePathScriptEntry)l;
-                return m.mode == mode && m.autoPlay == autoPlay && m.time == time && m.loop == loop && m.reverse == reverse &&
-                    m.rotation == rotation && m.accelerateTime == accelerateTime && m.decelerateTime == decelerateTime &&
-                    m.horizontalSwingRange0 == horizontalSwingRange0 && m.horizontalSwingRange1 == horizontalSwingRange1 &&
-                    m.swingMoveSpeedRange0 == swingMoveSpeedRange0 && m.swingMoveSpeedRange1 == swingMoveSpeedRange1 &&
-                    m.swingRotation0 == swingRotation0 && m.swingRotation1 == swingRotation1 &&
-                    m.swingRotationSpeedRange0 == swingRotationSpeedRange0 && m.swingRotationSpeedRange1 == swingRotationSpeedRange1;
+                return m.parentFileName == parentFileName && m.layerId == layerId;
             }
             return false;
         }
@@ -860,7 +860,7 @@ namespace FFXIVHSLib
                 MapModel m = (MapModel) l;
                 return modelPath == m.modelPath &&
                        modelName == m.modelName &&
-                       numMeshes == m.numMeshes && avfxFilePath == m.avfxFilePath && isEmissive == m.isEmissive;
+                       numMeshes == m.numMeshes && avfxFilePath == m.avfxFilePath;
             }
             return false;
         }

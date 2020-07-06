@@ -724,7 +724,7 @@ namespace FFXIVHSLauncher
                                             subGimMapGroup.groupTransform = TransformFromGimmickHeader(subGimEntry.Header);
 
                                             AddSgbModelsToMap(ref map, ref subGimMapGroup, subGimEntry.Gimmick);
-                                            AddAnimationsToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header, rootGimEntry.MovePathSettings);
+                                            AddAnimationsToMapGroup(ref map, rootGimEntry.Gimmick, ref subGimMapGroup, subGimEntry.Header, subGimEntry.MovePathSettings);
 
                                             rootGimMapGroup.AddGroup(subGimMapGroup);
                                         }
@@ -843,7 +843,7 @@ namespace FFXIVHSLauncher
                     mgToApplyRots.AddEntry(animScript);
             // add movepathsettings
             {
-                var mse = movePathSettings.ToMapMovePathScriptEntry(header);
+                var mse = movePathSettings.ToMapMovePathScriptEntry(header.GimmickId, parent.File.Path);
                 m.TryAddUniqueMovePathScript(mse);
                 mgToApplyRots.AddEntry(mse);
             }

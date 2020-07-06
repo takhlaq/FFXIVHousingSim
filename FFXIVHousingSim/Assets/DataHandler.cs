@@ -283,7 +283,10 @@ public static class DataHandler
                 groupRootObject.AddComponent(Type.GetType(_mapAnimScriptNames[mapScriptId]));
         if (group.movePathScriptRefs != null)
             foreach (var mapScriptId in group.movePathScriptRefs)
+            {
                 groupRootObject.AddComponent(Type.GetType(_mapMovePathScriptNames[mapScriptId]));
+                Debug.LogFormat("========MOVEPATH: " + _mapMovePathScriptNames[mapScriptId] + " =========\n");
+            }
         if (group.animTransformScriptRefs != null)
             foreach (var mapScriptId in group.animTransformScriptRefs)
                 groupRootObject.AddComponent(Type.GetType(_mapAnimTransformScriptNames[mapScriptId]));

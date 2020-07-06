@@ -145,6 +145,7 @@ namespace FFXIVHSLauncher
             var h = l.Header;
 
             mLight.layerId = (int)h.UnknownId;
+            mLight.parentFilePath = l.Parent.File.Path;
 
             mLight.lightType = h.LightType.ToString().Replace("LightType", "");
             mLight.attenuation = h.Attenuation;
@@ -339,13 +340,17 @@ namespace FFXIVHSLauncher
             return mse;
         }
 
-        public static MapMovePathScriptEntry ToMapMovePathScriptEntry(this SaintCoinach.Graphics.Lgb.LgbGimmickEntry.MovePathSettings m, SaintCoinach.Graphics.Lgb.LgbGimmickEntry.HeaderData header)
+        public static MapMovePathScriptEntry ToMapMovePathScriptEntry(this SaintCoinach.Graphics.Lgb.LgbGimmickEntry.MovePathSettings m, uint id, string parentFileName)
         {
             MapMovePathScriptEntry mse = new MapMovePathScriptEntry();
 
             mse.mode = (MapMovePathModeLayer)m.Mode;
+
+            mse.layerId = id;
+            mse.parentFileName = parentFileName;
+
+            mse.name = "MOVE_" + Path.GetFileNameWithoutExtension(parentFileName) + "_" + id;
             
-            mse.name = "MOVE_" + header.GimmickId;
             mse.scriptFileName = mse.name + ".cs";
 
             mse.autoPlay = m.AutoPlay;
